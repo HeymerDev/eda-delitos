@@ -220,6 +220,19 @@ FIGURAS: list[tuple[str, str]] = [
     ("inconsistencias", "Resumen de errores de formato e inconsistencias entre columnas"),
     # Actividad 1.3
     ("informe", "Informe de diagnóstico de calidad generado por la aplicación"),
+    # Objetivo 2 · Actividad 2.1
+    ("decisiones", "Tabla de decisiones de limpieza"),
+    ("codigo_coordenadas", "Función de reconstrucción de las coordenadas"),
+    ("coord_antes", "Coordenadas con solo la reconstrucción decimal, antes de corregir intercambios y signos"),
+    ("coord_despues", "Ubicación de los delitos con coordenadas válidas después de la corrección"),
+    ("antes_despues", "Registros del conjunto original y del conjunto limpio, y registros eliminados por motivo"),
+    # Actividad 2.2
+    ("faltantes_tratamiento", "Tratamiento de los valores faltantes según el tipo de variable"),
+    # Actividad 2.3
+    ("box_diario", "Diagramas de caja del número de delitos por día, por año"),
+    ("box_barrio", "Diagramas de caja del número de delitos por barrio en escala lineal y logarítmica"),
+    ("validacion", "Validación del conjunto de datos limpio"),
+    ("neon_limpios", "Verificación de la carga de delitos_limpios y delitos_eliminados en el editor SQL de Neon"),
 ]
 
 

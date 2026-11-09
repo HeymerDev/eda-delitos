@@ -57,6 +57,50 @@ def cargar_original() -> tuple[pd.DataFrame, str]:
     return leer_csv_original(), "copia CSV local del original"
 
 
+@st.cache_data(show_spinner="Cargando el conjunto limpio…")
+def cargar_limpios() -> tuple[pd.DataFrame, str]:
+    """Lee delitos_limpios desde Neon; si no es posible o está vacía, desde data/processed."""
+    from src.utils import DATA_PROCESSED
+
+    if _neon_habilitado():
+        try:
+            from src.utils import get_engine
+
+            with get_engine().connect() as conn:
+                df = pd.read_sql_query("SELECT * FROM delitos_limpios ORDER BY orden", conn,
+                                       parse_dates=["fecha_hecho"])
+            if len(df):
+                df["latitud"] = df.latitud.astype(float)
+                df["longitud"] = df.longitud.astype(float)
+                return df, "Neon (tabla delitos_limpios)"
+        except Exception:  # noqa: BLE001
+            pass
+    ruta = DATA_PROCESSED / "delitos_limpios.parquet"
+    if not ruta.exists():
+        from src import cleaning
+
+        cleaning.guardar(cleaning.limpiar())
+    return pd.read_parquet(ruta), "archivo local data/processed/delitos_limpios.parquet"
+
+
+@st.cache_data(show_spinner="Cargando los resultados de la limpieza…")
+def cargar_limpieza() -> dict:
+    from src import cleaning
+
+    r = cleaning.cargar_resultados()
+    if r is None:
+        cleaning.guardar(cleaning.limpiar())
+        r = cleaning.cargar_resultados()
+    return r
+
+
+@st.cache_data(show_spinner="Cargando los registros eliminados…")
+def cargar_eliminados() -> pd.DataFrame:
+    from src.utils import DATA_PROCESSED
+
+    return pd.read_parquet(DATA_PROCESSED / "delitos_eliminados.parquet")
+
+
 @st.cache_data(show_spinner="Calculando el diagnóstico…")
 def cargar_diagnostico() -> dict:
     """Usa los resultados de `python -m src.diagnostico` si existen; si no, los calcula."""

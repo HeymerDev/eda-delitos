@@ -27,8 +27,8 @@ import unicodedata
 import urllib.request
 from pathlib import Path
 
-from src import diagnostico
-from src.utils import DOCS, FIGURAS, ROOT, SQL_DIR, figura
+from src import cleaning, diagnostico
+from src.utils import DATA_PROCESSED, DOCS, FIGURAS, ROOT, SQL_DIR, figura
 
 CAPTURAS = DOCS / "capturas"
 CAPTURAS_APP = CAPTURAS / "app"
@@ -40,12 +40,18 @@ APP = {  # clave -> página de la app donde está el contenedor "figura_<clave>"
     "duplicados_muestra": "Diagnostico",
     "inconsistencias": "Diagnostico",
     "informe": "Diagnostico",
+    "decisiones": "Limpieza",
+    "antes_despues": "Limpieza",
+    "faltantes_tratamiento": "Limpieza",
+    "validacion": "Limpieza",
 }
-PLOTLY = {  # clave -> función que construye la figura a partir de los resultados
+PLOTLY = {  # clave -> (resultados que necesita, función que construye la figura)
     **{k: ("diagnostico", f) for k, f in diagnostico.FIGURAS_PLOTLY.items()},
+    **{k: ("limpieza", f) for k, f in cleaning.FIGURAS_PLOTLY.items()},
+    "coord_despues": ("limpios", cleaning.fig_coord_despues),
 }
-PENDIENTES = {"neon_proyecto", "neon_verificacion"}  # capturas manuales (Neon, Power BI)
-PAGINAS = ["", "Diagnostico"]  # páginas que se capturan completas y por secciones
+PENDIENTES = {"neon_proyecto", "neon_verificacion", "neon_limpios"}  # capturas manuales (Neon, Power BI)
+PAGINAS = ["", "Diagnostico", "Limpieza"]  # páginas que se capturan completas y por secciones
 
 
 def ruta_figura(clave: str) -> Path:
@@ -82,6 +88,8 @@ def _funcion_python(ruta: Path, nombre: str) -> str:
 CODIGO = {
     "sql_create_raw": ("sql/01_schema.sql", "sql",
                        lambda: _bloque_sql("01_schema.sql", "CREATE TABLE IF NOT EXISTS delitos_raw")),
+    "codigo_coordenadas": ("src/utils.py", "python",
+                           lambda: _funcion_python(ROOT / "src" / "utils.py", "reconstruir_coordenada")),
 }
 
 _SQL_CLAVE = r"\b(CREATE|TABLE|IF|NOT|EXISTS|PRIMARY|KEY|REFERENCES|NULL|CHECK|IN|BETWEEN|AND|OR|DEFAULT|SELECT|FROM|WHERE|GROUP|BY|ORDER|JOIN|LEFT|ON|AS|CASE|WHEN|THEN|ELSE|END|INDEX|COMMENT|IS|CONSTRAINT|DROP|CASCADE|VIEW|COUNT|USING)\b"
@@ -248,7 +256,15 @@ def capturar_codigo(claves: list[str]) -> list[Path]:
 
 
 def exportar_plotly(claves: list[str]) -> list[Path]:
-    resultados = {"diagnostico": diagnostico.cargar_resultados() or diagnostico.diagnosticar()}
+    import pandas as pd
+
+    if cleaning.cargar_resultados() is None:
+        cleaning.guardar(cleaning.limpiar())
+    resultados = {
+        "diagnostico": diagnostico.cargar_resultados() or diagnostico.diagnosticar(),
+        "limpieza": cleaning.cargar_resultados(),
+        "limpios": pd.read_parquet(DATA_PROCESSED / "delitos_limpios.parquet"),
+    }
     generadas = []
     for clave in claves:
         modulo, construir = PLOTLY[clave]
