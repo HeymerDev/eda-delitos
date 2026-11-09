@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import re
 import sys
 
 import pandas as pd
@@ -144,8 +145,7 @@ def verificar() -> None:
     with engine.connect() as conn:
         for i, s in enumerate(_sentencias(sql), 1):
             # El título es el primer comentario numerado ("-- 1. ...") que precede a la consulta
-            titulo = next((l[3:].strip() for l in s.splitlines() if l[:3] == "-- " and l[3:4].isdigit()),
-                          f"Consulta {i}")
+            titulo = next((l[3:].strip() for l in s.splitlines() if re.match(r"-- \d+\. ", l)), f"Consulta {i}")
             print(f"\n=== {titulo} ===")
             print(pd.read_sql_query(text(s), conn).to_string(index=False))
 
