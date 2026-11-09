@@ -134,6 +134,32 @@ python -m src.diagnostico
 
 El informe queda en `docs/informe_diagnostico.md`.
 
+### Fase 2: limpieza
+
+Generar el conjunto limpio (unos 10 segundos):
+
+```bash
+python -m src.cleaning
+```
+
+El comando produce:
+
+- `data/processed/delitos_limpios.{parquet,csv}` y `delitos_eliminados.{parquet,csv}`.
+- `docs/decisiones_limpieza.md`, con la tabla de decisiones y las cifras de la ejecución.
+- La tabla de validación en consola. Si alguna prueba falla, el proceso termina con error.
+
+Cargar el resultado en Neon (vacía y vuelve a llenar `delitos_limpios` y `delitos_eliminados`):
+
+```bash
+python -m src.load limpios
+```
+
+Verificar la carga; ahora todas las consultas deben dar OK:
+
+```bash
+python -m src.load verificar
+```
+
 ### Aplicación
 
 ```bash
@@ -166,5 +192,4 @@ mano y se guardan con el nombre que indica el comando al final.
 
 Estas secciones se completan al terminar cada fase:
 
-- Limpieza y carga de `delitos_limpios`: `python -m src.cleaning` y luego `python -m src.load limpios`.
 - Vistas para Power BI: ejecutar `sql/03_vistas_powerbi.sql` en Neon.
