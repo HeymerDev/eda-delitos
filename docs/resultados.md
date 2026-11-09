@@ -377,9 +377,19 @@ En ambos casos no es posible saber cuál de los dos valores es el erróneo.
 - Las coordenadas están dentro del área de Bucaramanga.
 - Las categorías y los tipos de dato son los permitidos.
 
-Estas pruebas coinciden con las restricciones `CHECK` del esquema de `delitos_limpios` en PostgreSQL. La carga
-en Neon se verificó con el script `sql/02_carga_verificacion.sql` (Figura 20).
-<!-- [PENDIENTE: escribir aquí el resultado de la verificación en Neon cuando se cargue delitos_limpios] -->
+Estas pruebas coinciden con las restricciones `CHECK` del esquema de `delitos_limpios` en PostgreSQL, de modo
+que la base de datos rechazaría cualquier registro que no las cumpliera.
+
+**Carga en Neon.** El conjunto limpio se cargó en `delitos_limpios` (130.297 registros) y el registro de
+eliminaciones en `delitos_eliminados` (4.779 registros). La verificación con `sql/02_carga_verificacion.sql`
+dio estado OK en todas las consultas (Figura 20):
+
+- La suma de ambas tablas es igual a los 135.076 registros de `delitos_raw`.
+- Ningún registro está en las dos tablas ni quedó sin destino.
+- Los conteos cuadran año por año y conducta por conducta.
+
+Además, los avisos, las coordenadas y el rango de fechas almacenados en Neon coinciden exactamente con los del
+archivo local.
 
 **Figura 17**
 
