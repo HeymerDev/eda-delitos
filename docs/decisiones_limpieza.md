@@ -87,7 +87,8 @@ subestimaría justamente los momentos y lugares de mayor riesgo.
   si ambos métodos coinciden. El z robusto usa la mediana y la MAD, que no se distorsionan por los
   mismos valores extremos que se quiere detectar, a diferencia de la media y la desviación estándar.
 - **Días:** los umbrales se calculan dentro de cada año, porque el nivel general cambia entre años
-  (por ejemplo, la caída de 2020). Días atípicos de mayor conteo:
+  (por ejemplo, la caída de 2020). Tras la limpieza hay 11 días atípicos.
+  4 de ellos son un 1 de enero. Días atípicos de mayor conteo:
 
 | fecha | delitos | limite_iqr | z_robusto |
 |---|---|---|---|
@@ -99,6 +100,22 @@ subestimaría justamente los momentos y lugares de mayor riesgo.
 | 2011-10-01 | 60 | 47,00 | 4,45 |
 | 2013-02-23 | 56 | 46,50 | 3,78 |
 | 2012-12-25 | 56 | 48,00 | 3,78 |
+
+- **Efecto de los duplicados en los picos:** antes de eliminar los duplicados, varios días de
+  diciembre de 2019 aparecían como los más atípicos de la serie. Los meses con más duplicados
+  eliminados fueron:
+
+| Año | Mes | Original | Duplicados | Limpio | % duplicado |
+|---|---|---|---|---|---|
+| 2.019 | 12 | 1.911 | 691 | 1.220 | 36,20 |
+| 2.020 | 11 | 1.058 | 389 | 669 | 36,80 |
+| 2.020 | 10 | 1.077 | 361 | 716 | 33,50 |
+| 2.018 | 10 | 1.290 | 205 | 1.085 | 15,90 |
+| 2.021 | 4 | 1.171 | 135 | 1.036 | 11,50 |
+
+- **Días sin registros:** 5 días no tienen ningún delito (2019-03-27, 2019-03-28, 2019-03-29, 2019-03-30, 2019-03-31). En una ciudad con una media de unos 30 delitos
+  diarios, lo más probable es que sea un hueco en la carga de datos y no una ausencia real de delitos.
+  Se documenta como limitación de las series diarias.
 
 - **Barrios:** la distribución es muy asimétrica (mediana de 46 delitos por barrio frente a 10.740 en CENTRO).
   Los barrios marcados son focos de concentración. En escala logarítmica ningún barrio supera

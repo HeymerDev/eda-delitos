@@ -278,6 +278,10 @@ def atipicos(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     df["flag_barrio_atipico"] = df.barrio.isin(barrios.index[barrios.atipico])
     r["barrios"] = barrios.rename_axis("barrio").reset_index()
 
+    # Días sin ningún registro (posibles huecos de carga) y días atípicos más frecuentes
+    r["dias_cero"] = [d.date() for d in diario.index[diario.delitos == 0]]
+    r["dias_atipicos_1_enero"] = int(((dias_atipicos.month == 1) & (dias_atipicos.day == 1)).sum())
+
     # Día del mes: el día 1 aparece más de lo esperado (posible fecha por defecto)
     por_dia = df.dia.value_counts().sort_index()
     r["dia_1"] = {"registros": int(por_dia[1]), "media_dias_2_28": float(por_dia.loc[2:28].mean())}
@@ -371,7 +375,19 @@ def limpiar(raw: pd.DataFrame | None = None) -> dict:
     }
     r["decisiones"] = decisiones(r)
     r["antes_despues"] = antes_despues(raw, limpios, elim)
+    r["duplicados_por_mes"] = duplicados_por_mes(df, elim)
     return r
+
+
+def duplicados_por_mes(df: pd.DataFrame, elim: pd.DataFrame) -> pd.DataFrame:
+    """Meses con más duplicados eliminados: muestra dónde se concentraban los errores de carga."""
+    base = df[~df.comuna.isin(MUNICIPIOS_EXTERNOS)]
+    dup = base.orden.isin(elim.orden[elim.motivo == "DUPLICADO_EXACTO"])
+    t = (base.assign(dup=dup).groupby([base.anio, base.mes])
+         .agg(original=("orden", "size"), duplicados=("dup", "sum")).reset_index())
+    t["limpio"] = t.original - t.duplicados
+    t["% duplicado"] = (100 * t.duplicados / t.original).round(1)
+    return t.sort_values("duplicados", ascending=False, ignore_index=True)
 
 
 def coordenadas_antes(raw: pd.DataFrame) -> pd.DataFrame:
@@ -557,9 +573,22 @@ def decisiones_markdown(r: dict) -> str:
         "  si ambos métodos coinciden. El z robusto usa la mediana y la MAD, que no se distorsionan por los",
         "  mismos valores extremos que se quiere detectar, a diferencia de la media y la desviación estándar.",
         "- **Días:** los umbrales se calculan dentro de cada año, porque el nivel general cambia entre años",
-        "  (por ejemplo, la caída de 2020). Días atípicos de mayor conteo:",
+        f"  (por ejemplo, la caída de 2020). Tras la limpieza hay {int(a['diario'].atipico.sum())} días atípicos.",
+        f"  {a['dias_atipicos_1_enero']} de ellos son un 1 de enero. Días atípicos de mayor conteo:",
         "",
         tabla_md(top_dias[["fecha", "delitos", "limite_iqr", "z_robusto"]].assign(fecha=lambda d: d.fecha.dt.date.astype(str))),
+        "",
+        "- **Efecto de los duplicados en los picos:** antes de eliminar los duplicados, varios días de",
+        "  diciembre de 2019 aparecían como los más atípicos de la serie. Los meses con más duplicados",
+        "  eliminados fueron:",
+        "",
+        tabla_md(r["duplicados_por_mes"].head(5).rename(columns={"anio": "Año", "mes": "Mes", "original": "Original",
+                                                                 "duplicados": "Duplicados", "limpio": "Limpio"})),
+        "",
+        f"- **Días sin registros:** {len(a['dias_cero'])} días no tienen ningún delito "
+        f"({', '.join(d.isoformat() for d in a['dias_cero'])}). En una ciudad con una media de unos 30 delitos",
+        "  diarios, lo más probable es que sea un hueco en la carga de datos y no una ausencia real de delitos.",
+        "  Se documenta como limitación de las series diarias.",
         "",
         "- **Barrios:** la distribución es muy asimétrica (mediana de "
         f"{fmt_int(a['barrios'].delitos.median())} delitos por barrio frente a {fmt_int(a['barrios'].delitos.max())} en CENTRO).",
@@ -593,6 +622,109 @@ def cargar_resultados() -> dict | None:
         return None
     with open(RUTA_RESULTADOS, "rb") as fh:
         return pickle.load(fh)
+
+
+# =============================================================================
+# Figuras (las usan la app y src/capturas.py)
+# =============================================================================
+ESTADOS_COORD = {
+    "ok": ("Correcta tras la reconstrucción", 0),
+    "intercambiada": ("Latitud y longitud intercambiadas", 1),
+    "signo": ("Longitud sin signo negativo", 2),
+    "fuera_area": ("Fuera del área (irrecuperable)", None),
+}
+
+
+def fig_coord_antes(r: dict):
+    import plotly.graph_objects as go
+
+    from src.utils import COLOR, estilo_figura
+
+    ca = r["coord_antes"]
+    fig = go.Figure()
+    for estado, (nombre, slot) in ESTADOS_COORD.items():
+        sub = ca[ca.estado == estado]
+        color = COLOR["critico"] if slot is None else COLOR["serie"][slot]
+        fig.add_scattergl(
+            x=sub.lon, y=sub.lat, mode="markers", name=f"{nombre} ({fmt_int(len(sub))})",
+            marker={"size": 4 if estado == "ok" else 9, "color": color, "opacity": 0.35 if estado == "ok" else 0.9,
+                    "line": {"width": 0 if estado == "ok" else 1, "color": "white"}},
+            hovertemplate="lat %{y:.5f}<br>lon %{x:.5f}<extra>" + nombre + "</extra>")
+    fig.add_annotation(x=-73.13, y=7.12, text="Bucaramanga", showarrow=True, ax=60, ay=-50,
+                       font={"color": COLOR["tinta2"]}, arrowcolor=COLOR["tenue"])
+    fig.add_annotation(x=71.2, y=-7.31, text="956 registros de 2020<br>con columnas cruzadas", showarrow=True,
+                       ax=-90, ay=-60, font={"color": COLOR["tinta2"]}, arrowcolor=COLOR["tenue"])
+    fig.update_xaxes(title="Longitud reconstruida (°)")
+    fig.update_yaxes(title="Latitud reconstruida (°)")
+    return estilo_figura(fig, "coord_antes", alto=480)
+
+
+def fig_coord_despues(limpios: pd.DataFrame):
+    import plotly.graph_objects as go
+
+    from src.utils import COLOR, estilo_figura
+
+    v = limpios.dropna(subset=["latitud"])
+    fig = go.Figure(go.Scattermap(
+        lat=v.latitud, lon=v.longitud, mode="markers",
+        marker={"size": 4, "color": COLOR["serie"][0], "opacity": 0.25},
+        name=f"Delitos con coordenada válida ({fmt_int(len(v))})",
+        text=v.barrio, hovertemplate="%{text}<br>lat %{lat:.5f}, lon %{lon:.5f}<extra></extra>"))
+    fig.update_layout(map={"style": "carto-positron", "center": {"lat": 7.115, "lon": -73.118}, "zoom": 11.6},
+                      showlegend=True)
+    return estilo_figura(fig, "coord_despues", alto=620)
+
+
+def fig_box_diario(r: dict):
+    import plotly.graph_objects as go
+
+    from src.utils import COLOR, estilo_figura
+
+    d = r["atipicos"]["diario"]
+    fig = go.Figure()
+    fig.add_box(x=d.anio.astype(str), y=d.delitos, name="Delitos por día", marker_color=COLOR["serie"][0],
+                boxpoints="outliers", marker={"size": 4, "opacity": 0.6}, line={"width": 1.5},
+                hovertemplate="%{x}: %{y} delitos<extra></extra>")
+    at = d[d.atipico]
+    fig.add_scatter(x=at.anio.astype(str), y=at.delitos, mode="markers",
+                    name=f"Día atípico por IQR y z robusto ({len(at)} días)",
+                    marker={"size": 10, "color": COLOR["critico"], "symbol": "diamond", "line": {"width": 1, "color": "white"}},
+                    customdata=at.fecha.dt.strftime("%d/%m/%Y"),
+                    hovertemplate="%{customdata}: %{y} delitos<extra>Atípico</extra>")
+    fig.update_xaxes(title=None, type="category")
+    fig.update_yaxes(title="Delitos por día", rangemode="tozero")
+    return estilo_figura(fig, "box_diario", alto=460)
+
+
+def fig_box_barrio(r: dict):
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+
+    from src.utils import COLOR, estilo_figura
+
+    b = r["atipicos"]["barrios"]
+    fig = make_subplots(rows=1, cols=2, horizontal_spacing=0.08,
+                        subplot_titles=("Escala lineal", "Escala logarítmica"))
+    for col in (1, 2):
+        fig.add_box(x=b.delitos, y=["Barrios"] * len(b), orientation="h", boxpoints="all", jitter=0.5,
+                    pointpos=0, marker={"size": 4, "opacity": 0.45, "color": COLOR["serie"][0]},
+                    line={"width": 1.5, "color": COLOR["serie"][0]}, fillcolor="rgba(42,120,214,0.08)",
+                    text=b.barrio, hovertemplate="%{text}: %{x:,} delitos<extra></extra>", showlegend=False,
+                    row=1, col=col)
+    fig.update_xaxes(title="Delitos por barrio (2010–2021)", row=1, col=1)
+    fig.update_xaxes(title="Delitos por barrio (escala log)", type="log", row=1, col=2)
+    fig.update_yaxes(showticklabels=False)
+    top = b.nlargest(3, "delitos")
+    etiquetas = [(top.iloc[0].delitos, top.iloc[0].barrio),
+                 (top.iloc[1:].delitos.mean(), " y ".join(top.iloc[1:].barrio))]
+    for x, texto in etiquetas:
+        fig.add_annotation(x=x, y=0.12, xref="x", yref="y", text=texto, showarrow=False,
+                           yanchor="bottom", font={"size": 10, "color": COLOR["tinta2"]})
+    fig.update_annotations(font_size=12)
+    return estilo_figura(fig, "box_barrio", alto=380)
+
+
+FIGURAS_PLOTLY = {"coord_antes": fig_coord_antes, "box_diario": fig_box_diario, "box_barrio": fig_box_barrio}
 
 
 def main() -> None:
