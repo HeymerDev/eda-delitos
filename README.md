@@ -124,12 +124,47 @@ Comprobar los conteos (también se puede ejecutar el archivo en el editor SQL de
 python -m src.load verificar
 ```
 
+### Fase 1: diagnóstico de calidad
+
+Generar el informe y los resultados que usa la app (tarda unos 40 segundos):
+
+```bash
+python -m src.diagnostico
+```
+
+El informe queda en `docs/informe_diagnostico.md`.
+
+### Aplicación
+
+```bash
+streamlit run app/Home.py
+```
+
+La app lee el original desde Neon (`delitos_raw`). Si no hay conexión, usa la copia CSV local. Para
+forzar la lectura local, defina la variable de entorno `FUENTE_DATOS=local`:
+
+- PowerShell: `$env:FUENTE_DATOS="local"`.
+- bash: `export FUENTE_DATOS=local`.
+
+### Capturas para el artículo
+
+```bash
+python -m src.capturas
+```
+
+El comando regenera todas las figuras en `docs/capturas/`:
+
+- **Gráficos:** PNG exportados con kaleido.
+- **Tablas y páginas de la app:** capturas tomadas con Playwright (headless), que arranca su propia instancia
+  de la app.
+- **Fragmentos de código:** imágenes generadas a partir de los archivos del proyecto.
+
+La numeración de las figuras sale de `src/utils.py` (`FIGURAS`). Las capturas de Neon y Power BI se toman a
+mano y se guardan con el nombre que indica el comando al final.
+
 ### Fases siguientes
 
 Estas secciones se completan al terminar cada fase:
 
-- Diagnóstico de calidad: `python -m src.diagnostico`.
 - Limpieza y carga de `delitos_limpios`: `python -m src.cleaning` y luego `python -m src.load limpios`.
 - Vistas para Power BI: ejecutar `sql/03_vistas_powerbi.sql` en Neon.
-- Aplicación: `streamlit run app/Home.py`.
-- Capturas para el artículo: `python -m src.capturas`.

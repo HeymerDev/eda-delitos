@@ -20,3 +20,6 @@ Thumbs.db
 .vscode/
 .idea/
 ~$*.xlsx
+
+# Configuración local de herramientas
+.claude/
