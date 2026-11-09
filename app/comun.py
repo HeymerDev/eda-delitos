@@ -158,6 +158,63 @@ def grafico_figura(fig, clave: str) -> None:
         st.plotly_chart(fig, width="stretch", config={"displaylogo": False})
 
 
+def filtros_sidebar(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
+    """Filtros de la barra lateral: rango de años, comuna, tipo de delito (grupo y conducta) y género.
+
+    Los valores se guardan en st.session_state para que se mantengan al cambiar de página.
+    Devuelve el DataFrame filtrado y una lista legible de los filtros activos.
+    """
+    from src.eda import ETIQUETA_GRUPO, GRUPOS
+
+    estado = st.session_state.setdefault("filtros", {})
+    amin, amax = int(df.anio.min()), int(df.anio.max())
+    comunas = sorted(df.comuna.unique(), key=lambda c: (not c[:2].isdigit(), c))
+    grupos = [g for g in GRUPOS if g in set(df.grupo_delito)]
+    generos = ["MASCULINO", "FEMENINO", "SIN DATO"]
+
+    with st.sidebar:
+        st.markdown("**Filtros**")
+        anios = st.slider("Rango de años", amin, amax, estado.get("anios", (amin, amax)))
+        sel_comunas = st.multiselect("Comuna o corregimiento", comunas, estado.get("comunas", []),
+                                     placeholder="Todas")
+        sel_grupos = st.multiselect("Tipo de delito (grupo)", grupos, estado.get("grupos", []),
+                                    format_func=lambda g: ETIQUETA_GRUPO[g], placeholder="Todos")
+        opciones_conducta = sorted(df[df.grupo_delito.isin(sel_grupos or grupos)].conducta.unique())
+        sel_conductas = st.multiselect("Conducta", opciones_conducta,
+                                       [c for c in estado.get("conductas", []) if c in opciones_conducta],
+                                       placeholder="Todas")
+        sel_generos = st.multiselect("Género de la víctima", generos, estado.get("generos", []), placeholder="Todos")
+        if st.button("Quitar filtros"):
+            st.session_state["filtros"] = {}
+            st.rerun()
+    st.session_state["filtros"] = {"anios": anios, "comunas": sel_comunas, "grupos": sel_grupos,
+                                   "conductas": sel_conductas, "generos": sel_generos}
+
+    m = df.anio.between(*anios)
+    activos = [] if anios == (amin, amax) else [f"años {anios[0]}–{anios[1]}"]
+    if sel_comunas:
+        m &= df.comuna.isin(sel_comunas)
+        activos.append("comuna: " + ", ".join(sel_comunas))
+    if sel_grupos:
+        m &= df.grupo_delito.isin(sel_grupos)
+        activos.append("grupo: " + ", ".join(ETIQUETA_GRUPO[g] for g in sel_grupos))
+    if sel_conductas:
+        m &= df.conducta.isin(sel_conductas)
+        activos.append("conducta: " + ", ".join(sel_conductas))
+    if sel_generos:
+        m &= df.genero.isin(sel_generos)
+        activos.append("género: " + ", ".join(sel_generos))
+    with st.sidebar:
+        st.caption(f"{int(m.sum()):,} de {len(df):,} registros".replace(",", "."))
+    return df[m], activos
+
+
+def aviso_filtros_activos(activos: list[str]) -> None:
+    if activos:
+        st.info("**Filtros activos:** " + " · ".join(activos) + ". Las cifras y figuras reflejan la selección; "
+                "las del artículo se calculan con el conjunto completo.")
+
+
 def aviso_filtros_no_aplican() -> None:
     with st.sidebar:
         st.markdown("**Filtros**")

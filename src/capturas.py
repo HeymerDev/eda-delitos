@@ -27,7 +27,7 @@ import unicodedata
 import urllib.request
 from pathlib import Path
 
-from src import cleaning, diagnostico
+from src import cleaning, diagnostico, eda
 from src.utils import DATA_PROCESSED, DOCS, FIGURAS, ROOT, SQL_DIR, figura
 
 CAPTURAS = DOCS / "capturas"
@@ -44,14 +44,18 @@ APP = {  # clave -> página de la app donde está el contenedor "figura_<clave>"
     "antes_despues": "Limpieza",
     "faltantes_tratamiento": "Limpieza",
     "validacion": "Limpieza",
+    "frecuencias": "Analisis_exploratorio",
+    "desc_conteos": "Analisis_exploratorio",
+    "chi2": "Analisis_exploratorio",
 }
 PLOTLY = {  # clave -> (resultados que necesita, función que construye la figura)
     **{k: ("diagnostico", f) for k, f in diagnostico.FIGURAS_PLOTLY.items()},
     **{k: ("limpieza", f) for k, f in cleaning.FIGURAS_PLOTLY.items()},
     "coord_despues": ("limpios", cleaning.fig_coord_despues),
+    **{k: ("limpios", f) for k, f in eda.FIGURAS_PLOTLY.items()},
 }
 PENDIENTES = {"neon_proyecto", "neon_verificacion", "neon_limpios"}  # capturas manuales (Neon, Power BI)
-PAGINAS = ["", "Diagnostico", "Limpieza"]  # páginas que se capturan completas y por secciones
+PAGINAS = ["", "Diagnostico", "Limpieza", "Analisis_exploratorio"]  # páginas que se capturan completas y por secciones
 
 
 def ruta_figura(clave: str) -> Path:
@@ -184,6 +188,39 @@ def _ajustar_alto(page) -> None:
     page.wait_for_timeout(1500)
 
 
+MAX_TRAMO = 6000  # px CSS por captura (×2 de escala = 12.000 px, por debajo del límite de Chromium)
+
+
+def _capturar_franja(page, x: float, y: float, ancho: float, alto: float):
+    """Captura una franja horizontal de la página en tramos y los une. Devuelve una imagen de Pillow."""
+    import io
+
+    from PIL import Image
+
+    if alto < 10:
+        return None
+    tramos = []
+    y_actual = y
+    while y_actual < y + alto - 1:
+        h = min(MAX_TRAMO, y + alto - y_actual)
+        png = page.screenshot(clip={"x": x, "y": y_actual, "width": ancho, "height": h})
+        tramos.append(Image.open(io.BytesIO(png)).convert("RGB"))
+        y_actual += h
+    return _unir(tramos)
+
+
+def _unir(imagenes):
+    from PIL import Image
+
+    ancho = max(i.width for i in imagenes)
+    total = Image.new("RGB", (ancho, sum(i.height for i in imagenes)), "white")
+    y = 0
+    for im in imagenes:
+        total.paste(im, (0, y))
+        y += im.height
+    return total
+
+
 def capturar_app(claves_app: list[str], neon: bool) -> list[Path]:
     from playwright.sync_api import sync_playwright
 
@@ -203,28 +240,32 @@ def capturar_app(claves_app: list[str], neon: bool) -> list[Path]:
                 _ajustar_alto(page)
                 nombre = pagina.lower() or "inicio"
                 main = page.locator('[data-testid="stMain"]')
-                destino = CAPTURAS_APP / f"{nombre}_completa.png"
-                main.screenshot(path=str(destino))
-                generadas.append(destino)
-
-                # Una captura por sección: se recorta la captura completa desde cada encabezado h2
-                # hasta el siguiente (posiciones relativas al área principal, en píxeles de la imagen).
-                from PIL import Image
-
                 caja_main = main.bounding_box()
-                escala = 2  # device_scale_factor
-                completa = Image.open(destino)
+
+                # Secciones: desde cada encabezado h2 hasta el siguiente. Cada sección se captura por
+                # tramos de como máximo MAX_TRAMO px (Chromium no genera imágenes de más de ~16.384 px
+                # y la escala es 2) y la página completa se arma uniendo las secciones con Pillow.
                 hs = [(h.inner_text().split("\n")[0], h.bounding_box())
                       for h in main.locator('[data-testid="stHeading"] h2').all() if h.is_visible()]
                 hs = sorted([h for h in hs if h[1] and h[1]["height"] > 0], key=lambda h: h[1]["y"])
-                for i, (texto, caja) in enumerate(hs):
-                    y0 = max(caja["y"] - caja_main["y"] - 12, 0) * escala
-                    y1 = ((hs[i + 1][1]["y"] - caja_main["y"] - 12) * escala) if i + 1 < len(hs) else completa.height
-                    sin_tildes = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode()
-                    slug = re.sub(r"[^a-z0-9]+", "_", sin_tildes.lower())[:40].strip("_")
-                    seccion = CAPTURAS_APP / f"{nombre}_{i + 1:02d}_{slug}.png"
-                    completa.crop((0, int(y0), completa.width, int(y1))).save(seccion)
-                    generadas.append(seccion)
+                fin = caja_main["y"] + caja_main["height"]
+                cortes = [caja_main["y"]] + [max(c["y"] - 12, caja_main["y"]) for _, c in hs] + [fin]
+                partes = []
+                for i in range(len(cortes) - 1):
+                    img = _capturar_franja(page, caja_main["x"], cortes[i], caja_main["width"], cortes[i + 1] - cortes[i])
+                    if img is None:
+                        continue
+                    partes.append(img)
+                    if i > 0:  # la franja 0 es la cabecera de la página, antes del primer h2
+                        texto = hs[i - 1][0]
+                        sin_tildes = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode()
+                        slug = re.sub(r"[^a-z0-9]+", "_", sin_tildes.lower())[:40].strip("_")
+                        seccion = CAPTURAS_APP / f"{nombre}_{i:02d}_{slug}.png"
+                        img.save(seccion)
+                        generadas.append(seccion)
+                destino = CAPTURAS_APP / f"{nombre}_completa.png"
+                _unir(partes).save(destino)
+                generadas.append(destino)
 
                 # Tablas presentadas como figuras numeradas
                 for clave in [k for k in claves_app if APP[k] == pagina]:

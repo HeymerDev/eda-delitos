@@ -233,6 +233,29 @@ FIGURAS: list[tuple[str, str]] = [
     ("box_barrio", "Diagramas de caja del número de delitos por barrio en escala lineal y logarítmica"),
     ("validacion", "Validación del conjunto de datos limpio"),
     ("neon_limpios", "Verificación de la carga de delitos_limpios y delitos_eliminados en el editor SQL de Neon"),
+    # Objetivo 3 · Actividad 3.1
+    ("frecuencias", "Frecuencias y porcentajes de las categorías principales de las variables del delito y de la víctima"),
+    ("frec_grupo", "Registros por grupo de delito, 2010–2021"),
+    ("desc_conteos", "Estadísticas descriptivas de los conteos de delitos por día, mes, barrio y comuna"),
+    ("hist_diario", "Histograma del número de delitos registrados por día"),
+    ("hist_barrio", "Histograma del número de delitos registrados por barrio"),
+    # Actividad 3.2
+    ("serie_anual", "Registros por año de los cinco grupos de delito más frecuentes"),
+    ("serie_mensual", "Serie mensual de registros de delitos, 2010–2021"),
+    ("dia_semana", "Registros por día de la semana"),
+    ("heat_mes_anio", "Mapa de calor de registros por mes y año"),
+    ("heat_dia_mes", "Mapa de calor del promedio diario de delitos por día de la semana y mes"),
+    ("cambio_2020", "Variación de los registros de 2020 frente al promedio 2017–2019, por grupo de delito"),
+    ("comunas", "Registros por comuna y corregimiento"),
+    ("top_barrios", "Los veinte barrios con más registros de delitos"),
+    ("concentracion_hurto", "Curva de concentración de los hurtos por barrio"),
+    # Actividad 3.3
+    ("cont_genero", "Tabla de contingencia del grupo de delito por género de la víctima (porcentaje por fila)"),
+    ("cont_curso", "Tabla de contingencia del grupo de delito por curso de vida de la víctima (porcentaje por fila)"),
+    ("cont_estado", "Tabla de contingencia del grupo de delito por estado civil de la víctima (porcentaje por fila)"),
+    ("chi2", "Pruebas de chi-cuadrado y V de Cramér entre el grupo de delito y las características de la víctima"),
+    ("spearman", "Correlación de Spearman entre los conteos de grupos de delito por barrio y año"),
+    ("dispersion", "Dispersión de hurtos y casos de violencia intrafamiliar por barrio y año"),
 ]
 
 
