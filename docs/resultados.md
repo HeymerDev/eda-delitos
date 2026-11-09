@@ -428,15 +428,268 @@ archivo local.
 
 ### Actividad 3.1: Calcular las estadísticas descriptivas y las frecuencias de cada variable.
 
-*(Se completa en la fase 3.)*
+El análisis exploratorio se hizo sobre los 130.297 registros del conjunto limpio (`src/eda.py`) y se presenta
+en la página *Análisis exploratorio* de la aplicación. Esa página permite filtrar por rango de años, comuna,
+tipo de delito y género; las cifras de este apartado corresponden al conjunto completo.
+
+**Variables categóricas.** Como todas las variables del conjunto son categóricas, se describieron con
+frecuencias y porcentajes (Figura 21).
+
+- **Tipo de delito (Figura 22):** el hurto es el más frecuente (48,96 % de los registros), seguido de las
+  lesiones personales (18,07 %), las lesiones en accidentes de tránsito (15,28 %) y la violencia intrafamiliar
+  (12,53 %). Estos cuatro grupos suman el 94,8 % de los registros.
+- **Arma o medio:** predominan los hechos sin empleo de armas (28,26 %) y con objetos contundentes (27,80 %).
+- **Víctima:** el 46,88 % de los registros corresponde a hombres y el 42,06 % a mujeres; el 46,31 % a adultos
+  y el 31,89 % a jóvenes. El 77,95 % de las víctimas se desplazaba a pie.
+- **Zona:** el 97,46 % de los hechos ocurrió en zona urbana.
+
+**Conteos.** Las únicas magnitudes numéricas son los conteos que resultan de agregar los registros. Sus
+estadísticas descriptivas (Figura 23) muestran dos comportamientos opuestos:
+
+- **Por día:** el conteo es casi simétrico (Figura 24). La media es de 29,73 delitos, la mediana de 29, la
+  desviación estándar de 9,33 y la asimetría de 0,20.
+- **Por barrio:** el conteo está muy sesgado a la derecha (Figura 25). La mediana es de 46 delitos, la media de
+  297,40, la asimetría de 7,01 y el coeficiente de variación de 277 %. Es decir, unos pocos barrios concentran
+  una gran parte de los registros, mientras que la mayoría registra pocos hechos en todo el periodo.
+
+**Figura 21**
+
+*Frecuencias y porcentajes de las categorías principales de las variables del delito y de la víctima*
+
+![Figura 21](capturas/figura_21_frecuencias.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
+
+**Figura 22**
+
+*Registros por grupo de delito, 2010–2021*
+
+![Figura 22](capturas/figura_22_frec_grupo.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
+
+**Figura 23**
+
+*Estadísticas descriptivas de los conteos de delitos por día, mes, barrio y comuna*
+
+![Figura 23](capturas/figura_23_desc_conteos.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
+
+**Figura 24**
+
+*Histograma del número de delitos registrados por día*
+
+![Figura 24](capturas/figura_24_hist_diario.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
+
+**Figura 25**
+
+*Histograma del número de delitos registrados por barrio*
+
+![Figura 25](capturas/figura_25_hist_barrio.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
 
 ### Actividad 3.2: Analizar la distribución de los delitos por zona geográfica y por periodo de tiempo.
 
-*(Se completa en la fase 3.)*
+**Distribución en el tiempo**
+
+- **Por año (Figura 26):** los registros pasaron de 8.488 en 2010 a un máximo de 13.354 en 2016. El hurto es el
+  grupo que más creció: de 3.348 registros en 2010 a 7.753 en 2018. Otras series muestran quiebres bruscos:
+  - Las lesiones en tránsito caen de 2.578 a 1.204 entre 2016 y 2017.
+  - Los delitos sexuales bajan de 461 a 129 entre 2018 y 2019.
+
+  Estos quiebres pueden reflejar cambios en el registro de la fuente y no solo en la ocurrencia de los
+  delitos, por lo que deben interpretarse con cautela.
+- **Por mes (Figura 27):** la serie es estable alrededor de unos 900 registros mensuales. Tiene una caída abrupta
+  en abril de 2020, el mínimo del periodo con 244 registros, que coincide con la cuarentena nacional. Enero de
+  2020 es el máximo, con 1.299.
+- **Por día de la semana (Figura 28):** el sábado concentra el 16,08 % de los registros, 12,6 % por encima del
+  promedio diario; los demás días tienen entre el 13,70 % y el 14,33 %.
+- **Mapas de calor:** el de mes y año (Figura 29) muestra el bloque de valores altos de 2016 a 2019 y los valores
+  bajos de abril y mayo de 2020. El de día de la semana y mes (Figura 30) ubica el promedio diario más alto en
+  los sábados de febrero (38,3 delitos) y el más bajo en los lunes de junio (24,9).
+
+**Cambio en 2020.** Frente al promedio de 2017–2019, los registros de 2020 cayeron un 29,4 % en total (Figura 31).
+
+- **Mayores descensos:** violencia intrafamiliar (−64,0 %), delitos sexuales (−61,6 %) y lesiones en tránsito
+  (−55,4 %). El hurto bajó un 23,1 %.
+- **Descensos que ya venían de antes:** parte de estos descensos había comenzado en 2019. Frente a 2019, los
+  delitos sexuales incluso aumentaron un 7,0 % en 2020.
+- **Aumento de los homicidios:** pasaron de un promedio de 97,7 a 253 registros, un aumento del 159,0 % que
+  rompe con la estabilidad de los años anteriores y merece verificarse contra otras fuentes.
+
+**Distribución en el espacio**
+
+- **Comunas (Figura 32):** San Francisco (11,77 %), Centro (10,21 %), Oriental (10,06 %), Cabecera del Llano
+  (9,46 %) y Norte (9,44 %) suman el 50,94 % de los registros. Los tres corregimientos rurales suman el 0,80 %.
+- **Barrios (Figura 33):** el barrio Centro es el de más registros, con 10.740 (8,24 % del total), seguido de San
+  Francisco y Cabecera del Llano. Los veinte primeros barrios acumulan el 49,45 % de los registros.
+- **Concentración de los hurtos (Figura 34):** **15 de los 409 barrios con hurtos (3,67 %) concentran el 50 %**,
+  con un índice de Gini de 0,834. Los cinco primeros son Centro, Cabecera del Llano, San Francisco, La Concordia
+  y San Alonso.
+- **Concentración de todos los delitos:** con todos los delitos juntos, la mitad de los registros se concentra
+  en 21 de 438 barrios (4,8 %).
+
+**Figura 26**
+
+*Registros por año de los cinco grupos de delito más frecuentes*
+
+![Figura 26](capturas/figura_26_serie_anual.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
+
+**Figura 27**
+
+*Serie mensual de registros de delitos, 2010–2021*
+
+![Figura 27](capturas/figura_27_serie_mensual.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
+
+**Figura 28**
+
+*Registros por día de la semana*
+
+![Figura 28](capturas/figura_28_dia_semana.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
+
+**Figura 29**
+
+*Mapa de calor de registros por mes y año*
+
+![Figura 29](capturas/figura_29_heat_mes_anio.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
+
+**Figura 30**
+
+*Mapa de calor del promedio diario de delitos por día de la semana y mes*
+
+![Figura 30](capturas/figura_30_heat_dia_mes.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
+
+**Figura 31**
+
+*Variación de los registros de 2020 frente al promedio 2017–2019, por grupo de delito*
+
+![Figura 31](capturas/figura_31_cambio_2020.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
+
+**Figura 32**
+
+*Registros por comuna y corregimiento*
+
+![Figura 32](capturas/figura_32_comunas.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
+
+**Figura 33**
+
+*Los veinte barrios con más registros de delitos*
+
+![Figura 33](capturas/figura_33_top_barrios.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
+
+**Figura 34**
+
+*Curva de concentración de los hurtos por barrio*
+
+![Figura 34](capturas/figura_34_concentracion_hurto.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
 
 ### Actividad 3.3: Cruzar los tipos de delito con las características de las víctimas mediante tablas de contingencia.
 
-*(Se completa en la fase 3.)*
+**Método.** Se construyeron tablas de contingencia entre el grupo de delito y el género, el curso de vida y el
+estado civil de la víctima (Figuras 35 a 37), expresadas como porcentaje por fila.
+
+- **Independencia:** se evaluó con la prueba de chi-cuadrado de Pearson.
+- **Fuerza de la asociación:** se midió con la V de Cramér, interpretada con los umbrales de Cohen (1988)
+  ajustados al número de categorías.
+- **Exclusiones:** los registros «SIN DATO» se excluyeron de cada prueba, por ser ausencia de información y no
+  una categoría de la víctima.
+
+**Resultados.** Las tres pruebas rechazan la independencia (p < 0,001), con ningún valor esperado menor que 5 en
+género y curso de vida, y el 4,2 % en estado civil (Figura 38). La fuerza de la asociación varía:
+
+- **Género:** asociación moderada (V = 0,344). Las mujeres son el 83,3 % de las víctimas de violencia
+  intrafamiliar y el 84,2 % de las de delitos sexuales, mientras que los hombres son el 87,3 % de las víctimas de
+  homicidio y el 57,0 % de las de hurto.
+- **Curso de vida:** asociación fuerte según el umbral ajustado (V = 0,236 con seis categorías). El rasgo más
+  marcado es que el 76,2 % de las víctimas de delitos sexuales son menores de 18 años: primera infancia 17,0 %,
+  infancia 21,9 % y adolescencia 37,3 %. En los demás grupos predominan los adultos y los jóvenes. Las personas
+  mayores representan el 29,8 % de las víctimas de homicidio en accidentes de tránsito.
+- **Estado civil:** asociación moderada (V = 0,152). El 93,7 % de las víctimas de delitos sexuales son
+  solteras, lo que es coherente con su edad. El 45,4 % de las víctimas de violencia intrafamiliar vive en unión
+  libre.
+
+**Correlaciones.** Para cumplir el requisito de analizar correlaciones, los registros se agregaron por barrio y
+año (5.256 combinaciones) y se calculó la correlación de Spearman entre los conteos de los seis grupos
+principales (Figura 39).
+
+- **Resultados:** todas las correlaciones son positivas y significativas (p < 0,001). Las más altas se dan entre
+  hurto y lesiones personales (ρ = 0,77) y entre lesiones personales y violencia intrafamiliar (ρ = 0,74).
+  Las más bajas involucran al homicidio (ρ entre 0,38 y 0,49).
+- **Dispersión (Figura 40):** muestra la relación entre hurtos y violencia intrafamiliar por barrio y año
+  (ρ = 0,69).
+- **Lectura:** los barrios donde hay más delitos de un tipo tienden a tener más de los otros. Sin embargo, como
+  el conjunto no incluye la población de cada barrio, esta correlación refleja en parte el tamaño y la actividad
+  de cada zona y no implica una relación causal entre los delitos.
+
+**Figura 35**
+
+*Tabla de contingencia del grupo de delito por género de la víctima (porcentaje por fila)*
+
+![Figura 35](capturas/figura_35_cont_genero.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
+
+**Figura 36**
+
+*Tabla de contingencia del grupo de delito por curso de vida de la víctima (porcentaje por fila)*
+
+![Figura 36](capturas/figura_36_cont_curso.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
+
+**Figura 37**
+
+*Tabla de contingencia del grupo de delito por estado civil de la víctima (porcentaje por fila)*
+
+![Figura 37](capturas/figura_37_cont_estado.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
+
+**Figura 38**
+
+*Pruebas de chi-cuadrado y V de Cramér entre el grupo de delito y las características de la víctima*
+
+![Figura 38](capturas/figura_38_chi2.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
+
+**Figura 39**
+
+*Correlación de Spearman entre los conteos de grupos de delito por barrio y año*
+
+![Figura 39](capturas/figura_39_spearman.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
+
+**Figura 40**
+
+*Dispersión de hurtos y casos de violencia intrafamiliar por barrio y año*
+
+![Figura 40](capturas/figura_40_dispersion.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
 
 ## Objetivo 4: Visualizar los patrones delictivos identificados mediante gráficos y mapas.
 

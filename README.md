@@ -160,6 +160,16 @@ Verificar la carga; ahora todas las consultas deben dar OK:
 python -m src.load verificar
 ```
 
+### Fase 3: análisis exploratorio
+
+El análisis se ve en la página *Análisis exploratorio* de la app, con filtros por años, comuna, tipo de delito
+y género. Para ver en consola un resumen de los resultados con el conjunto completo (frecuencias, conteos,
+cambio en 2020, concentración de los hurtos, chi-cuadrado y Spearman):
+
+```bash
+python -m src.eda
+```
+
 ### Aplicación
 
 ```bash
