@@ -88,11 +88,13 @@ CREATE TABLE delitos_limpios (
 
     -- Espacio. comuna conserva el prefijo numérico del original ('03. SAN FRANCISCO')
     -- para que ordene igual en gráficos y en Power BI. tipo_territorio separa las
-    -- comunas, los corregimientos y los registros asignados a otros municipios.
+    -- 17 comunas urbanas de los 3 corregimientos rurales. Los registros que el original
+    -- asigna a otros municipios no entran en esta tabla: están en delitos_eliminados
+    -- con motivo FUERA_DEL_MUNICIPIO, porque el estudio se limita a Bucaramanga.
     barrio                VARCHAR(100) NOT NULL,
     comuna                VARCHAR(40)  NOT NULL,
     tipo_territorio       VARCHAR(20)  NOT NULL
-        CHECK (tipo_territorio IN ('COMUNA', 'CORREGIMIENTO', 'OTRO MUNICIPIO', 'SIN DATO')),
+        CHECK (tipo_territorio IN ('COMUNA', 'CORREGIMIENTO', 'SIN DATO')),
     zona                  VARCHAR(10)  NOT NULL CHECK (zona IN ('URBANA', 'RURAL', 'OTROS', 'SIN DATO')),
     -- NUMERIC(10,7): 3 dígitos enteros y 7 decimales (precisión de ~1 cm), exacto y sin
     -- errores de redondeo binario. Es NULL cuando no hay coordenada recuperable.
@@ -125,7 +127,6 @@ CREATE TABLE delitos_limpios (
     flag_coord_corregida         BOOLEAN NOT NULL DEFAULT FALSE,  -- lat/lon intercambiadas o signo corregido
     flag_coord_fuera_area        BOOLEAN NOT NULL DEFAULT FALSE,  -- coordenada fuera de Bucaramanga, anulada
     flag_dia_semana_corregido    BOOLEAN NOT NULL DEFAULT FALSE,  -- DIA_SEMANA original no coincidía con la fecha
-    flag_fuera_municipio         BOOLEAN NOT NULL DEFAULT FALSE,  -- NOM_COMUNA indica otro municipio
     flag_barrio_comuna           BOOLEAN NOT NULL DEFAULT FALSE,  -- barrio asignado a una comuna poco habitual
     flag_curso_vida_estado_civil BOOLEAN NOT NULL DEFAULT FALSE,  -- ej. primera infancia y casado
     flag_dia_atipico             BOOLEAN NOT NULL DEFAULT FALSE,  -- el día del hecho tiene un conteo extremo
@@ -146,11 +147,17 @@ CREATE INDEX ix_limpios_fecha_hecho ON delitos_limpios (fecha_hecho);
 -- 4. delitos_eliminados: trazabilidad de lo que se quitó
 -- -----------------------------------------------------------------------------
 -- Cada registro del original que no pasa a delitos_limpios queda aquí con su motivo.
+-- Motivos (ver docs/decisiones_limpieza.md):
+--   FUERA_DEL_MUNICIPIO  NOM_COMUNA asigna el hecho a otro municipio (fuera del alcance del estudio).
+--   DUPLICADO_EXACTO     idéntico a otro registro en todas las columnas salvo ORDEN.
+--   ERROR_IRRECUPERABLE  error imposible de corregir que invalida el registro.
+-- Un registro tiene un solo motivo: primero se aplica el filtro de alcance y luego la
+-- eliminación de duplicados, sobre los registros que quedan.
 -- orden_conservado indica, en los duplicados, qué registro del grupo se mantuvo.
 CREATE TABLE delitos_eliminados (
     orden             INTEGER PRIMARY KEY REFERENCES delitos_raw (orden),
     motivo            VARCHAR(30) NOT NULL
-        CHECK (motivo IN ('DUPLICADO_EXACTO', 'INCONSISTENTE', 'ERROR_IRRECUPERABLE')),
+        CHECK (motivo IN ('FUERA_DEL_MUNICIPIO', 'DUPLICADO_EXACTO', 'ERROR_IRRECUPERABLE')),
     detalle           TEXT,
     orden_conservado  INTEGER REFERENCES delitos_raw (orden),
     fecha_proceso     TIMESTAMPTZ NOT NULL DEFAULT now()
