@@ -6,6 +6,7 @@ Uso (desde la raíz del proyecto, con el entorno virtual activo):
     python -m src.load raw          # carga la copia CSV en delitos_raw (135.076 filas)
     python -m src.load limpios      # carga delitos_limpios y delitos_eliminados (Fase 2)
     python -m src.load verificar    # ejecuta sql/02_carga_verificacion.sql y muestra los resultados
+    python -m src.load vistas       # crea las vistas de Power BI (sql/03_vistas_powerbi.sql)
 """
 from __future__ import annotations
 
@@ -150,9 +151,25 @@ def verificar() -> None:
             print(pd.read_sql_query(text(s), conn).to_string(index=False))
 
 
+def crear_vistas() -> None:
+    """Crea las vistas de Power BI (sql/03_vistas_powerbi.sql) y muestra su verificación."""
+    from sqlalchemy import text
+
+    sentencias = _sentencias((SQL_DIR / "03_vistas_powerbi.sql").read_text(encoding="utf-8"))
+    verif = next(s for s in sentencias if "claves_distintas" in s)  # la consulta de verificación
+    engine = get_engine()
+    with engine.begin() as conn:  # una transacción: o se crean todas las vistas o ninguna
+        for s in sentencias:
+            if s is not verif:
+                conn.exec_driver_sql(s)
+    print("Vistas creadas.")
+    with engine.connect() as conn:
+        print(pd.read_sql_query(text(verif), conn).to_string(index=False))
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("accion", choices=["csv", "schema", "raw", "limpios", "verificar"])
+    p.add_argument("accion", choices=["csv", "schema", "raw", "limpios", "verificar", "vistas"])
     a = p.parse_args()
     {
         "csv": exportar_csv,
@@ -160,6 +177,7 @@ def main() -> None:
         "raw": cargar_raw,
         "limpios": cargar_limpios,
         "verificar": verificar,
+        "vistas": crear_vistas,
     }[a.accion]()
 
 
