@@ -143,7 +143,9 @@ def verificar() -> None:
     pd.set_option("display.max_rows", 100)
     with engine.connect() as conn:
         for i, s in enumerate(_sentencias(sql), 1):
-            titulo = next((l.strip("- ").strip() for l in s.splitlines() if l.startswith("-- ")), f"Consulta {i}")
+            # El título es el primer comentario numerado ("-- 1. ...") que precede a la consulta
+            titulo = next((l[3:].strip() for l in s.splitlines() if l[:3] == "-- " and l[3:4].isdigit()),
+                          f"Consulta {i}")
             print(f"\n=== {titulo} ===")
             print(pd.read_sql_query(text(s), conn).to_string(index=False))
 
