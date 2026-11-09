@@ -240,18 +240,19 @@ def estilo_figura(fig, clave: str, alto: int = 420):
     """Aplica el estilo común: título numerado arriba, fuente abajo, ejes y rejilla discretos."""
     fig.update_layout(
         title={"text": f"<b>{titulo_figura(clave)}</b>", "x": 0, "xanchor": "left",
+               "yref": "container", "y": 0.985, "yanchor": "top",
                "font": {"size": 15, "color": COLOR["tinta"]}},
         height=alto,
         paper_bgcolor=COLOR["superficie"], plot_bgcolor=COLOR["superficie"],
         font={"family": "system-ui, -apple-system, 'Segoe UI', sans-serif", "size": 12, "color": COLOR["tinta2"]},
-        margin={"l": 10, "r": 20, "t": 60, "b": 70},
+        margin={"l": 10, "r": 20, "t": 75, "b": 100},
         legend={"orientation": "h", "y": 1.02, "yanchor": "bottom", "x": 0, "title": None},
         hoverlabel={"bgcolor": "white", "font_size": 12},
         separators=",.",
     )
     fig.update_xaxes(gridcolor=COLOR["rejilla"], linecolor=COLOR["eje"], zeroline=False, title_font_color=COLOR["tinta2"])
     fig.update_yaxes(gridcolor=COLOR["rejilla"], linecolor=COLOR["eje"], zeroline=False, title_font_color=COLOR["tinta2"])
-    fig.add_annotation(text=FUENTE_FIGURAS, xref="paper", yref="paper", x=0, y=0, yshift=-58,
+    fig.add_annotation(text=FUENTE_FIGURAS, xref="paper", yref="paper", x=0, y=0, yshift=-95,
                        xanchor="left", yanchor="bottom", showarrow=False,
                        font={"size": 11, "color": COLOR["tenue"]})
     return fig

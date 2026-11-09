@@ -632,5 +632,73 @@ def main() -> None:
     print(f"\nInforme: {RUTA_INFORME.relative_to(RUTA_INFORME.parents[1])}")
 
 
+# =============================================================================
+# Figuras (las usan la app y src/capturas.py para exportarlas a PNG)
+# =============================================================================
+def fig_faltantes(r: dict):
+    import plotly.graph_objects as go
+
+    from src.utils import COLOR, estilo_figura
+
+    f = r["faltantes"]
+    pv = f["por_variable"].sort_values("Registros")
+    marc = f["detalle"].groupby("Variable").apply(
+        lambda g: "<br>".join(f"«{m}»: {fmt_int(n)}" for m, n in zip(g.Marcador, g.Registros)), include_groups=False)
+    fig = go.Figure(go.Bar(
+        y=pv.Variable, x=pv["% del total"], orientation="h", marker_color=COLOR["serie"][0],
+        text=[f"{fmt_int(n)} ({fmt_pct(p, 2 if p < 1 else 1)})" for n, p in zip(pv.Registros, pv["% del total"])],
+        textposition="outside", textfont={"size": 11, "color": COLOR["tinta2"]}, cliponaxis=False,
+        customdata=pv.Variable.map(marc), hovertemplate="<b>%{y}</b><br>%{customdata}<extra></extra>",
+    ))
+    fig.update_layout(barcornerradius=4, bargap=0.35)
+    fig.update_yaxes(title=None, type="category")
+    fig.update_xaxes(title="% de los 135.076 registros", ticksuffix=" %", range=[0, pv["% del total"].max() * 1.28])
+    return estilo_figura(fig, "faltantes", alto=480)
+
+
+def fig_duplicados_anio(r: dict):
+    import plotly.graph_objects as go
+
+    from src.utils import COLOR, estilo_figura
+
+    pa = r["duplicados"]["por_anio"]
+    fig = go.Figure()
+    fig.add_bar(x=pa["Año"], y=pa["Duplicados sobrantes"], name="Observados", marker_color=COLOR["serie"][0],
+                customdata=pa["% del año"],
+                hovertemplate="%{x}: %{y:,} duplicados sobrantes (%{customdata:.2f} % del año)<extra></extra>",
+                text=[fmt_pct(v) for v in pa["% del año"]], textposition="outside", cliponaxis=False,
+                textfont={"size": 11, "color": COLOR["tinta2"]})
+    fig.add_bar(x=pa["Año"], y=pa["Esperados por azar"], name="Esperados por azar (promedio de 5 permutaciones)",
+                marker_color=COLOR["eje"], hovertemplate="%{x}: %{y:.1f} esperados por azar<extra></extra>")
+    fig.update_layout(barmode="group", barcornerradius=4, bargap=0.25, bargroupgap=0.08)
+    fig.update_xaxes(title=None, type="category")
+    fig.update_yaxes(title="Registros duplicados sobrantes", rangemode="tozero")
+    fig.add_annotation(text="Etiqueta: % de los registros del año", xref="paper", yref="paper", x=1, y=1.02,
+                       xanchor="right", yanchor="bottom", showarrow=False, font={"size": 11, "color": COLOR["tenue"]})
+    return estilo_figura(fig, "duplicados_anio", alto=450)
+
+
+def fig_coord_formatos(r: dict, n: int = 12):
+    import plotly.graph_objects as go
+
+    from src.utils import COLOR, estilo_figura
+
+    pt = r["coordenadas"]["patrones"].head(n).iloc[::-1]
+    fig = go.Figure()
+    for i, col in enumerate(["LATITUD", "LONGITUD"]):
+        fig.add_bar(y=pt["Formato (9 = dígito)"], x=pt[col], orientation="h", name=col,
+                    marker_color=COLOR["serie"][i],
+                    hovertemplate="Formato %{y}<br>" + col + ": %{x:,} registros<extra></extra>")
+    # Apiladas: la mayoría de los formatos aparece en una sola de las dos columnas.
+    fig.update_layout(barmode="stack", barcornerradius=4, bargap=0.35)
+    fig.update_yaxes(title="Formato del texto (9 = cualquier dígito)", type="category",
+                     tickfont={"family": "Consolas, monospace"})
+    fig.update_xaxes(title="Registros", tickformat=",d")
+    return estilo_figura(fig, "coord_formatos", alto=520)
+
+
+FIGURAS_PLOTLY = {"faltantes": fig_faltantes, "duplicados_anio": fig_duplicados_anio, "coord_formatos": fig_coord_formatos}
+
+
 if __name__ == "__main__":
     main()
