@@ -1,19 +1,22 @@
 # Resultados
 
-<!-- Párrafo introductorio: se revisa al cerrar la fase 4 para incluir las cifras finales de limpieza y análisis. -->
 El proyecto analizó los 135.076 registros de delitos ocurridos en Bucaramanga entre 2010 y 2021, publicados
 por la Alcaldía de Bucaramanga en el portal de datos abiertos de Colombia (conjunto `75fz-q98y`).
 
-- **Almacenamiento:** el conjunto original se guardó sin modificaciones en una base de datos PostgreSQL alojada
-  en Neon, en una tabla de solo lectura, y se conservó una copia en CSV cuya integridad se comprueba con
-  huellas SHA-256.
-- **Diagnóstico:** con Python (pandas) se diagnosticó la calidad de los datos: estructura, marcadores de dato
-  faltante, duplicados, formato de las coordenadas, fechas e inconsistencias entre columnas.
-- **Limpieza:** los problemas encontrados se corrigieron en un conjunto de datos nuevo, en el que cada
-  eliminación queda registrada con su motivo.
-- **Análisis y visualización:** sobre los datos limpios se hizo un análisis exploratorio de la distribución de
-  los delitos en el espacio, en el tiempo y según el perfil de las víctimas, con una aplicación interactiva en
-  Streamlit (gráficos de plotly). El tablero final se elaboró en Power BI, conectado a vistas de la base de datos.
+- **Almacenamiento:** el conjunto original se cargó sin modificaciones en una base de datos PostgreSQL alojada
+  en Neon (tabla `delitos_raw`) y se conservó una copia en CSV cuya integridad se comprueba con huellas SHA-256.
+- **Diagnóstico:** con Python (pandas) se diagnosticó la calidad de los datos. Se encontraron marcadores de dato
+  faltante en el 17,9 % de los registros, 4.622 duplicados, coordenadas almacenadas como texto con hasta 29
+  formatos distintos e inconsistencias entre columnas.
+- **Limpieza:** los problemas se corrigieron en un conjunto de datos nuevo (`delitos_limpios`, 130.297
+  registros). Cada eliminación quedó registrada con su motivo en `delitos_eliminados` (4.779 registros), y cada
+  decisión, en una tabla de decisiones.
+- **Análisis exploratorio:** sobre los datos limpios se analizó la distribución de los delitos en el espacio, en
+  el tiempo y según el perfil de las víctimas, con estadísticas descriptivas, tablas de contingencia con
+  chi-cuadrado y V de Cramér, y correlaciones de Spearman. Este análisis se presenta en una aplicación
+  interactiva en Streamlit con gráficos de plotly y mapas de densidad.
+- **Visualización:** el tablero final se elaboró en Power BI, conectado a un modelo en estrella de vistas de la
+  base de datos.
 
 ## Objetivo 1: Diagnosticar la calidad del conjunto de datos de delitos de Bucaramanga.
 
@@ -695,12 +698,187 @@ principales (Figura 39).
 
 ### Actividad 4.1: Seleccionar los tipos de gráficos más adecuados para cada tipo de variable y análisis.
 
-*(Se completa en la fase 4.)*
+El tipo de gráfico se seleccionó según el tipo de variable y la pregunta de cada análisis (Figura 41):
+
+- **Variables categóricas:** barras horizontales ordenadas, porque la longitud se compara con más precisión que
+  el ángulo de un gráfico circular y las etiquetas largas se leen mejor.
+- **Distribución de los conteos:** histogramas para la forma y diagramas de caja para los atípicos.
+- **Variables temporales:** series de tiempo, y mapas de calor para los cruces de mes con año y de día de la
+  semana con mes.
+- **Variaciones con signo:** barras divergentes.
+- **Concentración espacial:** una curva de concentración y mapas de densidad.
+- **Relación entre dos variables categóricas:** tablas de contingencia como mapas de calor del porcentaje por
+  fila.
+- **Correlación entre conteos:** matriz de Spearman y gráfico de dispersión.
+
+Se aplicaron además criterios comunes:
+
+- Un solo eje vertical por gráfico.
+- Color según su función: secuencial para magnitudes, divergente para variaciones y un color fijo por grupo de
+  delito.
+- Una paleta validada para daltonismo.
+- Un título numerado y la fuente en cada figura.
+
+**Figura 41**
+
+*Criterios de selección del tipo de gráfico según la variable y el análisis*
+
+![Figura 41](capturas/figura_41_seleccion_graficos.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
 
 ### Actividad 4.2: Elaborar los gráficos, como series de tiempo, barras y mapas de calor, y los mapas de concentración por zona.
 
-*(Se completa en la fase 4.)*
+**Gráficos.** Los gráficos se elaboraron con plotly y son interactivos en la aplicación: muestran el valor al
+pasar el cursor y permiten acercar y descargar la imagen. Comprenden las series de tiempo, las barras, los mapas
+de calor, los diagramas de caja, los histogramas y los gráficos de dispersión presentados en los objetivos 2 y 3.
+Las versiones del artículo se exportaron como imágenes con kaleido.
+
+**Mapas de concentración.** Se elaboraron mapas de densidad con los 124.097 registros que tienen una coordenada
+válida, agrupados en 3.361 celdas de unos 110 metros (Figura 42). Agrupar por celdas evita que la densidad
+calculada punto a punto sature el mapa.
+
+- **Mapa general:** la mayor densidad se ubica en el centro de la ciudad y en los ejes viales que lo conectan
+  con el norte y con Cabecera del Llano.
+- **Mapas por grupo (Figura 43):** muestran que los delitos no se concentran igual. El hurto se concentra con
+  fuerza en el centro, mientras que la violencia intrafamiliar y las lesiones personales se distribuyen de
+  forma más dispersa hacia las zonas residenciales del norte y de la periferia.
+- **Delitos sexuales sin ubicación:** no aparecen en los mapas porque la fuente no publica su ubicación. Los
+  4.047 registros de violencia sexual del original traen el marcador «xx.xxxx». En el conjunto limpio son el
+  63,5 % de las 6.200 coordenadas faltantes, lo que indica que ese faltante no es aleatorio y probablemente
+  responde a la protección de las víctimas. Su distribución espacial solo puede analizarse por barrio y comuna.
+
+**Tablero de Power BI.** El tablero final se construyó en Power BI, conectado a Neon mediante cinco vistas que
+forman un modelo en estrella (`sql/03_vistas_powerbi.sql`):
+
+- Una vista de hechos (Figura 44).
+- Cuatro vistas de dimensiones: tiempo, territorio, conducta y víctima.
+
+**Conexión segura.** La conexión usa un rol de solo lectura, y las credenciales no se almacenan en el archivo
+del tablero.
+
+**Contenido del tablero (Figuras 45 y 46):**
+
+- **Medidas DAX:** total de delitos, variación porcentual anual, porcentaje de hurto, porcentaje de «SIN DATO»
+  y participación de la comuna con más casos.
+- **Segmentadores:** año, comuna, grupo de delito y género.
+
+**Validación.** Los valores del tablero se contrastaron con las cifras de referencia calculadas en Python
+(`docs/powerbi_guia.md`).
+<!-- [PENDIENTE: confirmar aquí que el tablero reproduce las cifras de referencia, p. ej. 130.297 delitos y 48,96 % de hurto] -->
+
+**Figura 42**
+
+*Mapa de densidad de los delitos con ubicación válida, 2010–2021*
+
+![Figura 42](capturas/figura_42_mapa_densidad.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023). Mapa base: © OpenStreetMap contributors © CARTO.
+
+**Figura 43**
+
+*Mapas de densidad por grupo de delito*
+
+![Figura 43](capturas/figura_43_mapa_grupos.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023). Mapa base: © OpenStreetMap contributors © CARTO.
+
+**Figura 44**
+
+*Vista de hechos para Power BI en PostgreSQL*
+
+![Figura 44](capturas/figura_44_sql_vistas.png)
+
+*Nota.* Elaboración propia; fragmento del archivo `sql/03_vistas_powerbi.sql`.
+
+**Figura 45**
+
+*Modelo de datos en estrella en Power BI*
+
+[CAPTURA PENDIENTE: vista de modelo de Power BI con las cinco vistas y sus relaciones]
+![Figura 45](capturas/figura_45_pbi_modelo.png)
+
+*Nota.* Elaboración propia en Power BI con datos de Alcaldía de Bucaramanga (2023).
+
+**Figura 46**
+
+*Tablero de Power BI con indicadores, segmentadores y visualizaciones*
+
+[CAPTURA PENDIENTE: tablero de Power BI completo]
+![Figura 46](capturas/figura_46_pbi_tablero.png)
+
+*Nota.* Elaboración propia en Power BI con datos de Alcaldía de Bucaramanga (2023).
 
 ### Actividad 4.3: Interpretar los patrones observados en las visualizaciones y contrastarlos con los antecedentes.
 
-*(Se completa en la fase 4.)*
+Los patrones identificados se reunieron en la página *Visualización y hallazgos* de la aplicación (Figura 47).
+Cada hallazgo tiene su cifra principal, su evidencia gráfica y un espacio para el contraste con los
+antecedentes. A continuación se resumen los siete hallazgos.
+
+**H1. Concentración espacial del hurto.** El 50 % de los hurtos ocurrió en 15 de los 409 barrios con hurtos
+(3,7 %), con un índice de Gini de 0,83 (Figura 34). Encabezan la lista Centro, Cabecera del Llano, San
+Francisco, La Concordia y San Alonso, y el mapa de densidad confirma el foco en el centro de la ciudad
+(Figura 43). La concentración sugiere que la prevención focalizada en pocos barrios abarcaría una parte
+importante del problema. Una limitación es que el conjunto no incluye la población ni la actividad comercial
+de los barrios, que permitirían calcular tasas.
+
+*Contraste con los antecedentes:* [PENDIENTE: escriba aquí el contraste con los antecedentes]
+
+**H2. Predominio y crecimiento del hurto.** El hurto representa el 48,96 % de los registros. Pasó de 3.348 en
+2010 a 7.753 en 2018 (131,6 % más) y, tras la caída de 2020, volvió a 7.520 en 2021 (Figura 26).
+
+*Contraste con los antecedentes:* [PENDIENTE]
+
+**H3. Perfil de género según el tipo de delito.** La asociación entre el grupo de delito y el género es
+moderada (V de Cramér = 0,344; Figura 35):
+
+- Las mujeres son el 83,3 % de las víctimas de violencia intrafamiliar y el 84,2 % de las de delitos sexuales.
+- Los hombres son el 87,3 % de las víctimas de homicidio y el 57,0 % de las de hurto.
+
+*Contraste con los antecedentes:* [PENDIENTE]
+
+**H4. Violencia sexual contra niños, niñas y adolescentes.** El 76,2 % de las víctimas de delitos sexuales es
+menor de 18 años: primera infancia 17,0 %, infancia 21,9 % y adolescencia 37,3 % (Figura 36). Es el único grupo
+de delito cuyas víctimas son mayoritariamente menores de edad.
+
+*Contraste con los antecedentes:* [PENDIENTE]
+
+**H5. Caída de 2020 y recuperación de 2021.** Los registros de 2020 fueron un 29,4 % menores que el promedio de
+2017–2019 (Figura 31). Abril de 2020 tiene el mínimo de la serie, con 244 registros, en coincidencia con la
+cuarentena (Figura 27). En 2021 los registros aumentaron un 25,3 %.
+
+Sin embargo, el cambio no se explica solo por la pandemia:
+
+- La violencia intrafamiliar y los delitos sexuales ya venían bajando en 2019.
+- Los homicidios aumentaron en 2020, de un promedio de 98 a 253 registros, un dato que conviene verificar con
+  otras fuentes.
+
+*Contraste con los antecedentes:* [PENDIENTE]
+
+**H6. Mayor ocurrencia los sábados.** El sábado concentra el 16,08 % de los registros, un 12,6 % por encima del
+promedio diario; los demás días son parejos (Figura 28). El patrón se repite en casi todos los meses (Figura 30).
+
+*Contraste con los antecedentes:* [PENDIENTE]
+
+**H7. La calidad del registro condiciona la lectura de las tendencias.** Los errores de carga se concentran en
+2019–2021 (Figura 6):
+
+- **Duplicados:** en diciembre de 2019, 691 de 1.911 registros (36,2 %) eran duplicados, y sin la limpieza esos
+  días habrían parecido picos reales.
+- **Quiebres en las series:** hay saltos bruscos en las lesiones en tránsito (2017) y en los delitos sexuales
+  (2019).
+- **Huecos:** del 27 al 31 de marzo de 2019 no hay ningún registro.
+- **Ubicaciones no publicadas:** los delitos sexuales no tienen ubicación.
+
+Por eso las tendencias de los últimos años deben leerse como tendencias del registro, y no necesariamente de la
+ocurrencia.
+
+*Contraste con los antecedentes:* [PENDIENTE]
+
+**Figura 47**
+
+*Página de hallazgos de la aplicación: patrón, cifra, evidencia y contraste con los antecedentes*
+
+![Figura 47](capturas/figura_47_hallazgos.png)
+
+*Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).

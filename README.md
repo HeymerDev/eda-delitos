@@ -198,8 +198,17 @@ El comando regenera todas las figuras en `docs/capturas/`:
 La numeración de las figuras sale de `src/utils.py` (`FIGURAS`). Las capturas de Neon y Power BI se toman a
 mano y se guardan con el nombre que indica el comando al final.
 
-### Fases siguientes
+### Fase 4: visualización, hallazgos y Power BI
 
-Estas secciones se completan al terminar cada fase:
+Crear las vistas en estrella para Power BI. Alternativamente, ejecute `sql/03_vistas_powerbi.sql` en el editor
+SQL de Neon.
 
-- Vistas para Power BI: ejecutar `sql/03_vistas_powerbi.sql` en Neon.
+```bash
+python -m src.load vistas
+```
+
+- **Power BI:** la conexión sin exponer credenciales, el modelo, las medidas DAX y las cifras de referencia
+  están en [docs/powerbi_guia.md](docs/powerbi_guia.md). El archivo `.pbix` se elabora en Power BI Desktop.
+- **Hallazgos:** la página *Visualización y hallazgos* de la app muestra cada hallazgo con su evidencia. El
+  contraste con los antecedentes se escribe en esa misma página, o directamente en
+  `docs/contraste_antecedentes.md`.
