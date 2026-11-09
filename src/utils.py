@@ -256,6 +256,16 @@ FIGURAS: list[tuple[str, str]] = [
     ("chi2", "Pruebas de chi-cuadrado y V de Cramér entre el grupo de delito y las características de la víctima"),
     ("spearman", "Correlación de Spearman entre los conteos de grupos de delito por barrio y año"),
     ("dispersion", "Dispersión de hurtos y casos de violencia intrafamiliar por barrio y año"),
+    # Objetivo 4 · Actividad 4.1
+    ("seleccion_graficos", "Criterios de selección del tipo de gráfico según la variable y el análisis"),
+    # Actividad 4.2
+    ("mapa_densidad", "Mapa de densidad de los delitos con ubicación válida, 2010–2021"),
+    ("mapa_grupos", "Mapas de densidad por grupo de delito"),
+    ("sql_vistas", "Vista de hechos para Power BI en PostgreSQL"),
+    ("pbi_modelo", "Modelo de datos en estrella en Power BI"),
+    ("pbi_tablero", "Tablero de Power BI con indicadores, segmentadores y visualizaciones"),
+    # Actividad 4.3
+    ("hallazgos", "Página de hallazgos de la aplicación: patrón, cifra, evidencia y contraste con los antecedentes"),
 ]
 
 

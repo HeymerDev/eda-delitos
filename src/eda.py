@@ -544,6 +544,130 @@ def fig_dispersion(df: pd.DataFrame, clave: str = "dispersion", x_grupo: str = "
     return estilo_figura(fig, clave, alto=480)
 
 
+# =============================================================================
+# 4.1 Selección de gráficos y 4.2 mapas de concentración
+# =============================================================================
+SELECCION_GRAFICOS = pd.DataFrame([
+    ("Grupo de delito, arma, género, curso de vida, estado civil, móvil, zona", "Categórica nominal u ordinal",
+     "Frecuencia y proporción de cada categoría", "Barras horizontales ordenadas; tabla de frecuencias",
+     "La longitud de una barra se compara con precisión; la orientación horizontal deja leer etiquetas largas. Se descartan los gráficos circulares: con más de 4 categorías los ángulos no se comparan bien.",
+     "frecuencias frec_grupo"),
+    ("Delitos por día y por barrio", "Numérica discreta (conteo)",
+     "Forma de la distribución, simetría, sesgo", "Histograma (escala log en barrios)",
+     "Muestra la forma completa de la distribución; la escala logarítmica hace legible un conteo con cola larga.",
+     "hist_diario hist_barrio"),
+    ("Delitos por día y por barrio", "Numérica discreta (conteo)",
+     "Valores atípicos", "Diagrama de caja",
+     "Resume mediana, cuartiles y valores fuera de los bigotes de Tukey; permite comparar años lado a lado.",
+     "box_diario box_barrio"),
+    ("Año, mes", "Temporal", "Tendencia y estacionalidad", "Serie de tiempo (líneas) con media móvil",
+     "La línea conserva el orden temporal y hace visibles tendencias, quiebres y la caída de 2020.",
+     "serie_anual serie_mensual"),
+    ("Mes × año; día de la semana × mes", "Dos variables temporales",
+     "Patrones cruzados (estacionalidad por año, día por mes)", "Mapa de calor",
+     "Una matriz con color secuencial de un solo tono permite leer 144 u 84 celdas a la vez y encontrar bloques altos o bajos.",
+     "heat_mes_anio heat_dia_mes"),
+    ("Día de la semana", "Categórica ordinal", "Comparación entre días", "Barras verticales con línea de promedio",
+     "El orden natural de los días se conserva en el eje X; la línea de promedio hace evidente el exceso del sábado.",
+     "dia_semana"),
+    ("Variación 2020 por grupo", "Numérica con signo", "Aumento o descenso frente a una referencia",
+     "Barras divergentes desde 0", "El signo se lee por el lado de la barra y el color (rojo aumento, azul descenso).",
+     "cambio_2020"),
+    ("Comuna, barrio", "Categórica nominal (espacial)", "Ranking de zonas", "Barras horizontales ordenadas",
+     "Ordenar de mayor a menor convierte la comparación en un ranking directo.", "comunas top_barrios"),
+    ("Barrio (hurtos acumulados)", "Conteo acumulado", "Concentración espacial", "Curva de concentración (Lorenz)",
+     "Responde directamente qué porcentaje de barrios acumula el 50 % de los hurtos y se compara con la diagonal de reparto uniforme.",
+     "concentracion_hurto"),
+    ("Latitud y longitud", "Coordenadas", "Concentración geográfica", "Mapa de densidad sobre mapa base",
+     "Con más de 120.000 puntos, un mapa de puntos se satura; la densidad muestra dónde se acumulan los hechos.",
+     "coord_despues mapa_densidad mapa_grupos"),
+    ("Grupo de delito × género / curso de vida / estado civil", "Dos categóricas",
+     "Asociación entre delito y víctima", "Tabla de contingencia como mapa de calor (% por fila) + chi-cuadrado y V de Cramér",
+     "El porcentaje por fila compara perfiles de víctima entre delitos de tamaño muy distinto; la prueba cuantifica la asociación.",
+     "cont_genero cont_curso cont_estado chi2"),
+    ("Conteos por barrio y año de cada grupo", "Numéricas discretas", "Correlación",
+     "Mapa de calor de correlación de Spearman y gráfico de dispersión (escala log)",
+     "Spearman no exige linealidad ni normalidad (conteos asimétricos); la dispersión muestra la nube real detrás del coeficiente.",
+     "spearman dispersion"),
+], columns=["Variable(s)", "Tipo de variable", "Pregunta del análisis", "Gráfico elegido", "Por qué", "claves"])
+
+
+def seleccion_graficos() -> pd.DataFrame:
+    """Tabla 4.1 con el número de figura de cada ejemplo, tomado del catálogo (src.utils.FIGURAS)."""
+    from src.utils import figura
+
+    t = SELECCION_GRAFICOS.copy()
+    t["Figuras"] = t.pop("claves").map(lambda c: ", ".join(str(figura(k)[0]) for k in c.split()))
+    return t
+
+CENTRO_MAPA = {"lat": 7.112, "lon": -73.118}
+# Escala secuencial de un solo tono (azul), de transparente a oscuro
+ESCALA_DENSIDAD = [[0, "rgba(205,226,251,0)"], [0.1, "rgba(158,197,244,0.55)"], [0.35, "#6da7ec"],
+                   [0.6, "#2a78d6"], [0.85, "#184f95"], [1, "#0d366b"]]
+
+
+def celdas(df: pd.DataFrame, tamano: float = 0.001) -> pd.DataFrame:
+    """Agrupa las coordenadas válidas en celdas de ~110 m (0,001°) con su número de delitos.
+
+    Con más de 120.000 puntos, la densidad calculada punto a punto satura el mapa; agregando por
+    celda y fijando el máximo de la escala en el percentil 95 se distinguen los focos.
+    """
+    v = df.dropna(subset=["latitud"])
+    g = v.assign(lat=(v.latitud / tamano).round() * tamano, lon=(v.longitud / tamano).round() * tamano)
+    return g.groupby(["lat", "lon"]).size().rename("delitos").reset_index()
+
+
+def _densitymap(c: pd.DataFrame, mostrar_escala: bool = True, radio: int = 9):
+    go = _go()
+    tope = float(c.delitos.quantile(0.95)) if len(c) else 1
+    return go.Densitymap(lat=c.lat, lon=c.lon, z=c.delitos, radius=radio, zmin=0, zmax=tope,
+                         colorscale=ESCALA_DENSIDAD, showscale=mostrar_escala,
+                         colorbar={"title": {"text": "Delitos por celda<br>(~110 m)", "side": "right"},
+                                   "thickness": 12},
+                         hovertemplate="%{z} delitos en la celda<extra></extra>")
+
+
+def fig_mapa_densidad(df: pd.DataFrame, clave: str = "mapa_densidad"):
+    go = _go()
+    c = celdas(df)
+    fig = go.Figure(_densitymap(c))
+    fig.update_layout(map={"style": "carto-positron", "center": CENTRO_MAPA, "zoom": 12})
+    fig.add_annotation(text=f"{fmt_int(int(c.delitos.sum()))} delitos con coordenada válida en {fmt_int(len(c))} celdas; "
+                            "escala hasta el percentil 95", xref="paper", yref="paper",
+                       x=1, y=1.02, xanchor="right", yanchor="bottom", showarrow=False,
+                       font={"size": 11, "color": COLOR["tinta2"]})
+    return estilo_figura(fig, clave, alto=660)
+
+
+def fig_mapas_grupos(df: pd.DataFrame, clave: str = "mapa_grupos",
+                     grupos: tuple[str, ...] = ("HURTO", "VIOLENCIA INTRAFAMILIAR", "LESIONES PERSONALES",
+                                                "LESIONES EN ACCIDENTE DE TRANSITO")):
+    """Pequeños múltiplos: un mapa de densidad por grupo, cada uno con su propia escala relativa.
+
+    Los delitos sexuales no se incluyen porque la fuente no publica su ubicación (todos sus registros
+    traen el marcador 'xx.xxxx').
+    """
+    from plotly.subplots import make_subplots
+
+    grupos = [g for g in grupos if df[df.grupo_delito == g].latitud.notna().any()]
+    if not grupos:
+        return None
+    filas = (len(grupos) + 1) // 2
+    titulos = [f"{ETIQUETA_GRUPO[g]} ({fmt_int(int(df[(df.grupo_delito == g)].latitud.notna().sum()))})" for g in grupos]
+    fig = make_subplots(rows=filas, cols=2, specs=[[{"type": "map"}] * 2] * filas, subplot_titles=titulos,
+                        horizontal_spacing=0.02, vertical_spacing=0.06)
+    for i, g in enumerate(grupos):
+        fig.add_trace(_densitymap(celdas(df[df.grupo_delito == g]), mostrar_escala=False, radio=8),
+                      row=i // 2 + 1, col=i % 2 + 1)
+    for i in range(len(grupos)):
+        nombre = "map" if i == 0 else f"map{i + 1}"
+        fig.layout[nombre].update(style="carto-positron", center=CENTRO_MAPA, zoom=11.2)
+    fig.add_annotation(text="Escala relativa en cada mapa (hasta su percentil 95); entre paréntesis, registros con ubicación",
+                       xref="paper", yref="paper", x=1, y=1.04, xanchor="right", yanchor="bottom", showarrow=False,
+                       font={"size": 11, "color": COLOR["tinta2"]})
+    return estilo_figura(fig, clave, alto=420 * filas + 60)
+
+
 def _fig_cont_genero(df): return fig_contingencia(df, "genero", "cont_genero")
 def _fig_cont_curso(df): return fig_contingencia(df, "curso_vida", "cont_curso")
 def _fig_cont_estado(df): return fig_contingencia(df, "estado_civil", "cont_estado")
@@ -556,6 +680,7 @@ FIGURAS_PLOTLY = {
     "comunas": fig_comunas, "top_barrios": fig_top_barrios, "concentracion_hurto": fig_concentracion,
     "cont_genero": _fig_cont_genero, "cont_curso": _fig_cont_curso, "cont_estado": _fig_cont_estado,
     "spearman": fig_spearman, "dispersion": fig_dispersion,
+    "mapa_densidad": fig_mapa_densidad, "mapa_grupos": fig_mapas_grupos,
 }
 
 
