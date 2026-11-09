@@ -47,6 +47,8 @@ APP = {  # clave -> página de la app donde está el contenedor "figura_<clave>"
     "frecuencias": "Analisis_exploratorio",
     "desc_conteos": "Analisis_exploratorio",
     "chi2": "Analisis_exploratorio",
+    "seleccion_graficos": "Visualizacion_y_hallazgos",
+    "hallazgos": "Visualizacion_y_hallazgos",
 }
 PLOTLY = {  # clave -> (resultados que necesita, función que construye la figura)
     **{k: ("diagnostico", f) for k, f in diagnostico.FIGURAS_PLOTLY.items()},
@@ -54,8 +56,8 @@ PLOTLY = {  # clave -> (resultados que necesita, función que construye la figur
     "coord_despues": ("limpios", cleaning.fig_coord_despues),
     **{k: ("limpios", f) for k, f in eda.FIGURAS_PLOTLY.items()},
 }
-PENDIENTES = {"neon_proyecto", "neon_verificacion", "neon_limpios"}  # capturas manuales (Neon, Power BI)
-PAGINAS = ["", "Diagnostico", "Limpieza", "Analisis_exploratorio"]  # páginas que se capturan completas y por secciones
+PENDIENTES = {"neon_proyecto", "neon_verificacion", "neon_limpios", "pbi_modelo", "pbi_tablero"}  # manuales
+PAGINAS = ["", "Diagnostico", "Limpieza", "Analisis_exploratorio", "Visualizacion_y_hallazgos"]  # páginas que se capturan completas y por secciones
 
 
 def ruta_figura(clave: str) -> Path:
@@ -94,6 +96,8 @@ CODIGO = {
                        lambda: _bloque_sql("01_schema.sql", "CREATE TABLE IF NOT EXISTS delitos_raw")),
     "codigo_coordenadas": ("src/utils.py", "python",
                            lambda: _funcion_python(ROOT / "src" / "utils.py", "reconstruir_coordenada")),
+    "sql_vistas": ("sql/03_vistas_powerbi.sql", "sql",
+                   lambda: _bloque_sql("03_vistas_powerbi.sql", "CREATE OR REPLACE VIEW vw_fact_delitos")),
 }
 
 _SQL_CLAVE = r"\b(CREATE|TABLE|IF|NOT|EXISTS|PRIMARY|KEY|REFERENCES|NULL|CHECK|IN|BETWEEN|AND|OR|DEFAULT|SELECT|FROM|WHERE|GROUP|BY|ORDER|JOIN|LEFT|ON|AS|CASE|WHEN|THEN|ELSE|END|INDEX|COMMENT|IS|CONSTRAINT|DROP|CASCADE|VIEW|COUNT|USING)\b"
