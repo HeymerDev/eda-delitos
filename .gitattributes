@@ -1,0 +1,6 @@
+# Los datos originales se guardan byte a byte: sin conversión de fin de línea,
+# para que las huellas de data/raw/SHA256SUMS.txt sigan siendo válidas tras clonar.
+data/raw/** -text -diff
+*.xlsx binary
+*.parquet binary
+*.png binary

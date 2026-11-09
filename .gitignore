@@ -1,0 +1,22 @@
+# Entorno y credenciales: nunca se versionan
+.venv/
+venv/
+.env
+.streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+
+# Datos derivados: se regeneran con src/cleaning.py (ver README)
+data/processed/*
+!data/processed/.gitkeep
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+~$*.xlsx
