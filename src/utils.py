@@ -7,8 +7,10 @@ from __future__ import annotations
 
 import hashlib
 import os
+import re
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -88,3 +90,168 @@ def get_engine():
     if url.startswith("postgresql://"):
         url = "postgresql+psycopg2://" + url[len("postgresql://"):]
     return create_engine(url, pool_pre_ping=True, connect_args={"sslmode": "require"})
+
+
+# =============================================================================
+# Coordenadas
+# =============================================================================
+# Área de referencia de Bucaramanga (rectángulo aproximado que contiene el municipio).
+LAT_MIN, LAT_MAX = 7.0, 7.25
+LON_MIN, LON_MAX = -73.25, -73.0
+
+
+def reconstruir_coordenada(texto: str, digitos_enteros: int) -> float | None:
+    """Reconstruye una coordenada publicada con separadores de miles mal puestos.
+
+    El original guarda las coordenadas como texto con comas en posiciones arbitrarias
+    ('7,170,557,382', '-7,312,605', '71,303,582,541'). Como en Bucaramanga la latitud
+    siempre tiene 1 dígito entero (7.xxx) y la longitud 2 (-73.xxx), basta con quitar
+    todo lo que no sea dígito e insertar el punto decimal en la posición conocida:
+        '7,170,557,382'  (1 entero) -> 7.170557382
+        '-7,312,605'     (2 enteros) -> -73.12605
+    Devuelve None si el texto no contiene dígitos (marcadores 'xx.xxxx' / '-yy.yyyy').
+    """
+    if texto is None:
+        return None
+    t = str(texto).strip()
+    digitos = re.sub(r"\D", "", t)
+    if not digitos:
+        return None
+    valor = float(f"{digitos[:digitos_enteros]}.{digitos[digitos_enteros:] or '0'}")
+    return -valor if t.startswith("-") else valor
+
+
+def corregir_coordenadas(latitud: pd.Series, longitud: pd.Series) -> pd.DataFrame:
+    """Aplica la reconstrucción a cada par (latitud, longitud) y clasifica el resultado.
+
+    Pasos:
+      1. Si la latitud trae signo '-' y la longitud no, las columnas vienen intercambiadas
+         (caso de 2020): se intercambian antes de reconstruir.
+      2. Se reconstruye cada valor con reconstruir_coordenada.
+      3. Bucaramanga está al occidente de Greenwich: una longitud positiva se corrige a negativa.
+      4. Si el par cae fuera del área de Bucaramanga, no es recuperable: se anula.
+
+    Devuelve un DataFrame con lat, lon y estado: ok, intercambiada, signo, faltante o fuera_area.
+    """
+    lat_txt = latitud.astype(str).str.strip()
+    lon_txt = longitud.astype(str).str.strip()
+    intercambio = (lat_txt.str.startswith("-") & ~lon_txt.str.startswith("-")).to_numpy()
+    lat_fuente = np.where(intercambio, lon_txt, lat_txt)
+    lon_fuente = np.where(intercambio, lat_txt, lon_txt)
+
+    lat = pd.Series([reconstruir_coordenada(t, 1) for t in lat_fuente], index=latitud.index, dtype="float64")
+    lon = pd.Series([reconstruir_coordenada(t, 2) for t in lon_fuente], index=latitud.index, dtype="float64")
+    signo = (lon > 0) & ~intercambio
+    lon = -lon.abs()
+
+    estado = pd.Series("ok", index=latitud.index, dtype="object")
+    estado[intercambio] = "intercambiada"
+    estado[signo] = "signo"
+    faltante = lat.isna() | lon.isna()
+    estado[faltante] = "faltante"
+    fuera = ~faltante & ~(lat.between(LAT_MIN, LAT_MAX) & lon.between(LON_MIN, LON_MAX))
+    estado[fuera] = "fuera_area"
+    lat[faltante | fuera] = np.nan
+    lon[faltante | fuera] = np.nan
+    return pd.DataFrame({"lat": lat, "lon": lon, "estado": estado})
+
+
+# =============================================================================
+# Formato (cifras en español: 135.076 y 12,5 %)
+# =============================================================================
+def fmt_int(n) -> str:
+    return f"{int(n):,}".replace(",", ".")
+
+
+def fmt_pct(x, decimales: int = 1) -> str:
+    return f"{x:.{decimales}f}".replace(".", ",") + " %"
+
+
+def fmt_dec(x, decimales: int = 2) -> str:
+    return f"{x:,.{decimales}f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def tabla_md(df: pd.DataFrame, max_filas: int | None = None) -> str:
+    """Convierte un DataFrame en tabla Markdown. Los enteros se escriben con punto de miles."""
+    if max_filas is not None:
+        df = df.head(max_filas)
+
+    def celda(v):
+        if isinstance(v, (bool, np.bool_)):
+            return "Sí" if v else "No"
+        if isinstance(v, (int, np.integer)):
+            return fmt_int(v)
+        if isinstance(v, (float, np.floating)):
+            return "" if np.isnan(v) else fmt_dec(v)
+        return str(v).replace("|", "\\|").replace("\n", " ")
+
+    filas = ["| " + " | ".join(map(str, df.columns)) + " |", "|" + "---|" * df.shape[1]]
+    filas += ["| " + " | ".join(celda(v) for v in fila) + " |" for fila in df.itertuples(index=False)]
+    return "\n".join(filas)
+
+
+# =============================================================================
+# Estilo de los gráficos (plotly) y catálogo de figuras
+# =============================================================================
+FUENTE_FIGURAS = "Fuente: Elaboración propia con datos de la Alcaldía de Bucaramanga (2023)."
+
+# Paleta de referencia validada para daltonismo (modo claro).
+COLOR = {
+    "superficie": "#fcfcfb", "tinta": "#0b0b0b", "tinta2": "#52514e", "tenue": "#898781",
+    "rejilla": "#e1e0d9", "eje": "#c3c2b7",
+    "serie": ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"],
+    "critico": "#d03b3b",
+}
+SECUENCIAL = ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"]
+
+# Orden de las figuras en el artículo (docs/resultados.md). El número de cada figura es su
+# posición en esta lista, así la app, los PNG y el documento usan siempre la misma numeración.
+FIGURAS: list[tuple[str, str]] = [
+    # Objetivo 1 · Actividad 1.1
+    ("neon_proyecto", "Proyecto y base de datos creados en Neon"),
+    ("sql_create_raw", "Definición de la tabla delitos_raw en PostgreSQL"),
+    ("neon_verificacion", "Verificación de la carga de delitos_raw en el editor SQL de Neon"),
+    ("estructura", "Estructura del conjunto de datos original: variables, tipos y cardinalidad"),
+    # Actividad 1.2
+    ("faltantes", "Marcadores de dato faltante por variable en el conjunto original"),
+    ("duplicados_anio", "Registros duplicados (sin considerar ORDEN) por año: observados frente a esperados por azar"),
+    ("duplicados_muestra", "Muestra de grupos de registros duplicados"),
+    ("coord_formatos", "Formatos de texto encontrados en las coordenadas"),
+    ("inconsistencias", "Resumen de errores de formato e inconsistencias entre columnas"),
+    # Actividad 1.3
+    ("informe", "Informe de diagnóstico de calidad generado por la aplicación"),
+]
+
+
+def figura(clave: str) -> tuple[int, str]:
+    """Devuelve (número, título) de una figura del catálogo."""
+    for i, (k, titulo) in enumerate(FIGURAS, 1):
+        if k == clave:
+            return i, titulo
+    raise KeyError(f"Figura no registrada en utils.FIGURAS: {clave}")
+
+
+def titulo_figura(clave: str) -> str:
+    n, t = figura(clave)
+    return f"Figura {n}. {t}"
+
+
+def estilo_figura(fig, clave: str, alto: int = 420):
+    """Aplica el estilo común: título numerado arriba, fuente abajo, ejes y rejilla discretos."""
+    fig.update_layout(
+        title={"text": f"<b>{titulo_figura(clave)}</b>", "x": 0, "xanchor": "left",
+               "font": {"size": 15, "color": COLOR["tinta"]}},
+        height=alto,
+        paper_bgcolor=COLOR["superficie"], plot_bgcolor=COLOR["superficie"],
+        font={"family": "system-ui, -apple-system, 'Segoe UI', sans-serif", "size": 12, "color": COLOR["tinta2"]},
+        margin={"l": 10, "r": 20, "t": 60, "b": 70},
+        legend={"orientation": "h", "y": 1.02, "yanchor": "bottom", "x": 0, "title": None},
+        hoverlabel={"bgcolor": "white", "font_size": 12},
+        separators=",.",
+    )
+    fig.update_xaxes(gridcolor=COLOR["rejilla"], linecolor=COLOR["eje"], zeroline=False, title_font_color=COLOR["tinta2"])
+    fig.update_yaxes(gridcolor=COLOR["rejilla"], linecolor=COLOR["eje"], zeroline=False, title_font_color=COLOR["tinta2"])
+    fig.add_annotation(text=FUENTE_FIGURAS, xref="paper", yref="paper", x=0, y=0, yshift=-58,
+                       xanchor="left", yanchor="bottom", showarrow=False,
+                       font={"size": 11, "color": COLOR["tenue"]})
+    return fig
