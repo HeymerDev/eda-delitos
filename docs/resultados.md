@@ -25,8 +25,14 @@ celda por celda que ambas versiones tuvieran el mismo contenido. Esa copia se ca
 
 Como se observa en la Figura 2, todas las columnas de `delitos_raw` se definieron como texto, salvo `ORDEN`, que
 es la clave primaria. Así la base conserva exactamente lo publicado, incluidos los errores, que son la
-evidencia del diagnóstico. La carga se verificó con un conteo de registros en el editor SQL de Neon (Figura 3).
-<!-- [PENDIENTE: escribir aquí el resultado del conteo de la Figura 3 cuando se ejecute la carga en Neon] -->
+evidencia del diagnóstico.
+
+La carga se hizo con el comando `COPY` de PostgreSQL en una sola transacción, que se revierte si el número de
+filas no coincide. Para verificarla se ejecutaron dos comprobaciones:
+
+- **Conteo:** la consulta de `sql/02_carga_verificacion.sql` devolvió 135.076 registros en `delitos_raw`,
+  igual al total del archivo original (Figura 3).
+- **Contenido:** al comparar la tabla con la copia CSV, ambas resultaron idénticas celda por celda.
 
 **Estructura.** La exploración del archivo mostró:
 
