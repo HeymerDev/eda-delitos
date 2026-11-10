@@ -771,9 +771,25 @@ del tablero.
   y participación de la comuna con más casos.
 - **Segmentadores:** año, comuna, grupo de delito y género.
 
-**Validación.** Los valores del tablero se contrastaron con las cifras de referencia calculadas en Python
-(`docs/powerbi_guia.md`).
-<!-- [PENDIENTE: confirmar aquí que el tablero reproduce las cifras de referencia, p. ej. 130.297 delitos y 48,96 % de hurto] -->
+**El tablero (Figura 46).** El proyecto de Power BI se generó por código (`src/powerbi.py`) y usa un tema
+visual de seguridad ciudadana: fondo oscuro, cifras en rojo de alerta y un color fijo por grupo de delito,
+ordenado por gravedad. La página contiene:
+
+- **Indicadores:** seis tarjetas.
+- **Segmentadores:** cuatro, por año, comuna, grupo de delito y género.
+- **Visuales:**
+  - La serie mensual, que reproduce la caída de abril de 2020.
+  - Las barras por grupo de delito y por comuna.
+  - Una matriz de mes por año con formato condicional en degradado rojo, que funciona como mapa de calor.
+
+**Validación.** Sin filtros, el tablero reproduce las cifras de referencia calculadas en Python
+(`docs/powerbi_guia.md`):
+
+- 130.297 delitos.
+- Variación del último año de +25,3 % (2021 frente a 2020).
+- 49 % de hurto.
+- 11,1 % de registros sin dato de género.
+- San Francisco como la comuna con más casos, con el 11,8 %.
 
 **Figura 42**
 
@@ -812,7 +828,6 @@ del tablero.
 
 *Tablero de Power BI con indicadores, segmentadores y visualizaciones*
 
-[CAPTURA PENDIENTE: tablero de Power BI completo]
 ![Figura 46](capturas/figura_46_pbi_tablero.png)
 
 *Nota.* Elaboración propia en Power BI con datos de Alcaldía de Bucaramanga (2023).
