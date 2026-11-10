@@ -754,6 +754,14 @@ forman un modelo en estrella (`sql/03_vistas_powerbi.sql`):
 - Una vista de hechos (Figura 44).
 - Cuatro vistas de dimensiones: tiempo, territorio, conducta y víctima.
 
+**Verificación de las vistas.** Las vistas se crearon en Neon y se comprobaron:
+
+- **Tamaño:** la vista de hechos tiene 130.297 registros. Las dimensiones tienen 4.383 fechas, 609 combinaciones
+  de comuna y barrio, 41 conductas y 92 perfiles de víctima, con una sola fila por clave.
+- **Relaciones:** todos los hechos encuentran su fila en cada dimensión.
+- **Cifras de referencia:** calculadas directamente sobre las vistas, coinciden con las de Python: 48,96 % de
+  hurto, 11,05 % de género sin dato y San Francisco como la comuna con más casos (11,77 %).
+
 **Conexión segura.** La conexión usa un rol de solo lectura, y las credenciales no se almacenan en el archivo
 del tablero.
 
