@@ -765,10 +765,20 @@ forman un modelo en estrella (`sql/03_vistas_powerbi.sql`):
 **Conexión segura.** La conexión usa un rol de solo lectura, y las credenciales no se almacenan en el archivo
 del tablero.
 
+**Modelo de datos (Figura 45).** En Power BI, las cinco vistas forman un esquema en estrella:
+
+- **Centro:** la tabla de hechos `vw_fact_delitos`.
+- **Relaciones:** cuatro relaciones de uno a varios, con dirección de filtro única, hacia las dimensiones de
+  territorio, tiempo, conducta y víctima.
+- **Claves:** las columnas de clave están ocultas para que no se usen por error en los visuales.
+- **Tabla de fechas:** `vw_dim_tiempo` está marcada como tabla de fechas e incluye la columna calculada
+  `inicio_mes`, que se usa en la serie mensual.
+- **Coordenadas:** latitud y longitud están categorizadas como datos geográficos.
+
 **Contenido del tablero (Figuras 45 y 46):**
 
-- **Medidas DAX:** total de delitos, variación porcentual anual, porcentaje de hurto, porcentaje de «SIN DATO»
-  y participación de la comuna con más casos.
+- **Medidas DAX:** total de delitos, variación porcentual del último año, porcentaje de hurto, porcentaje de
+  «SIN DATO» y participación de la comuna con más casos.
 - **Segmentadores:** año, comuna, grupo de delito y género.
 
 **El tablero (Figura 46).** El proyecto de Power BI se generó por código (`src/powerbi.py`) y usa un tema
@@ -819,7 +829,6 @@ ordenado por gravedad. La página contiene:
 
 *Modelo de datos en estrella en Power BI*
 
-[CAPTURA PENDIENTE: vista de modelo de Power BI con las cinco vistas y sus relaciones]
 ![Figura 45](capturas/figura_45_pbi_modelo.png)
 
 *Nota.* Elaboración propia en Power BI con datos de Alcaldía de Bucaramanga (2023).
