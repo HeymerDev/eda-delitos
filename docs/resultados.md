@@ -56,7 +56,6 @@ filas no coincide. Para verificarla se ejecutaron dos comprobaciones:
 
 *Proyecto y base de datos creados en Neon*
 
-[CAPTURA PENDIENTE: panel del proyecto en Neon]
 ![Figura 1](capturas/figura_01_neon_proyecto.png)
 
 *Nota.* Elaboración propia en Neon (PostgreSQL). La captura no debe mostrar la cadena de conexión ni las credenciales.
@@ -73,7 +72,6 @@ filas no coincide. Para verificarla se ejecutaron dos comprobaciones:
 
 *Verificación de la carga de delitos_raw en el editor SQL de Neon*
 
-[CAPTURA PENDIENTE: editor SQL de Neon con el resultado de la primera consulta de `sql/02_carga_verificacion.sql`]
 ![Figura 3](capturas/figura_03_neon_verificacion.png)
 
 *Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
@@ -422,7 +420,6 @@ archivo local.
 
 *Verificación de la carga de delitos_limpios y delitos_eliminados en el editor SQL de Neon*
 
-[CAPTURA PENDIENTE: editor SQL de Neon con el resultado de las consultas 2 y 4 de `sql/02_carga_verificacion.sql`]
 ![Figura 20](capturas/figura_20_neon_limpios.png)
 
 *Nota.* Elaboración propia con datos de Alcaldía de Bucaramanga (2023).
