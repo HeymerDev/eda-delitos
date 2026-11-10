@@ -208,7 +208,14 @@ python -m src.load vistas
 ```
 
 - **Power BI:** la conexión sin exponer credenciales, el modelo, las medidas DAX y las cifras de referencia
-  están en [docs/powerbi_guia.md](docs/powerbi_guia.md). El archivo `.pbix` se elabora en Power BI Desktop.
+  están en [docs/powerbi_guia.md](docs/powerbi_guia.md).
+- **Proyecto de Power BI ya armado:** se genera con el comando de abajo. Después se abre
+  `powerbi_local/Delitos_Bucaramanga.pbip` en Power BI Desktop, se escriben las credenciales de Neon y se pulsa
+  *Actualizar*.
+
+  ```bash
+  python -m src.powerbi
+  ```
 - **Hallazgos:** la página *Visualización y hallazgos* de la app muestra cada hallazgo con su evidencia. El
   contraste con los antecedentes se escribe en esa misma página, o directamente en
   `docs/contraste_antecedentes.md`.

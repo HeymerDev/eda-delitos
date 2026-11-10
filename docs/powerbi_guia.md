@@ -28,6 +28,37 @@ propio en lugar del usuario dueño de la base:
 2. Ejecútelo una sola vez en el editor de Neon, con una contraseña generada en ese momento. También puede
    crear el rol desde *Roles* en la consola de Neon y luego ejecutar solo las líneas `GRANT`.
 
+## Atajo: proyecto de Power BI ya armado
+
+`python -m src.powerbi` genera un proyecto de Power BI (`.pbip`, la versión en texto de un `.pbix`) que ya
+trae todo lo de las secciones 3 a 5: las cinco vistas conectadas a Neon, las relaciones, la tabla de fechas,
+las ocho medidas DAX y una página *Tablero* con:
+
+- **Indicadores:** seis tarjetas.
+- **Segmentadores:** año, comuna, grupo de delito y género.
+- **Visuales:** la serie mensual, las barras por grupo y por comuna, y la matriz de mes por año.
+
+Pasos:
+
+1. **Generar el proyecto:** ejecute `python -m src.powerbi`. Se crean dos carpetas:
+   - `powerbi/`: el proyecto versionado en git, con un servidor de ejemplo.
+   - `powerbi_local/`: la copia para abrir en este equipo, con el servidor y la base de su `.env`. Está en
+     `.gitignore`.
+2. **Abrir:** haga doble clic en `powerbi_local/Delitos_Bucaramanga.pbip`.
+3. **Actualizar:** pulse *Actualizar*. Cuando Power BI pida credenciales, elija *Base de datos* y escriba su
+   usuario y contraseña de Neon (idealmente `powerbi_lector`).
+4. **Comprobar:** verifique las cifras de la sección 6.
+5. **Guardar:** use *Archivo → Guardar como → .pbix* si necesita entregar un solo archivo.
+
+Si abre el proyecto versionado (`powerbi/`), primero cambie los parámetros `Servidor` y `BaseDatos` en
+*Inicio → Transformar datos → Editar parámetros*.
+
+Los ajustes visuales que el proyecto no incluye se agregan a mano en Power BI:
+
+- El formato condicional de la matriz (*Formato → Valores de celda → Color de fondo → Escala de colores*).
+- El mapa de Azure Maps.
+- Los colores por grupo de delito.
+
 ## 2. Conectar Power BI a Neon sin exponer credenciales
 
 1. **Abrir el conector:** en Power BI Desktop, use *Obtener datos → Base de datos PostgreSQL*.
