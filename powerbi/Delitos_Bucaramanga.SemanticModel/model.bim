@@ -1,0 +1,488 @@
+{
+  "compatibilityLevel": 1567,
+  "model": {
+    "culture": "es-ES",
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "sourceQueryCulture": "es-CO",
+    "tables": [
+      {
+        "name": "vw_fact_delitos",
+        "lineageTag": "0d61a572-ecd4-5d8b-b5dd-67ee8cb07394",
+        "columns": [
+          {
+            "name": "orden",
+            "dataType": "int64",
+            "sourceColumn": "orden",
+            "lineageTag": "274723f2-276a-59a6-989f-a2c1331f43b0",
+            "isHidden": true,
+            "summarizeBy": "none"
+          },
+          {
+            "name": "fecha_hecho",
+            "dataType": "dateTime",
+            "sourceColumn": "fecha_hecho",
+            "lineageTag": "78d86adb-53da-506f-b799-60c15d94fcd2",
+            "formatString": "dd/mm/yyyy",
+            "isHidden": true
+          },
+          {
+            "name": "territorio_key",
+            "dataType": "string",
+            "sourceColumn": "territorio_key",
+            "lineageTag": "299c9008-fb13-5a52-a2af-09c22d827d28",
+            "isHidden": true
+          },
+          {
+            "name": "conducta_key",
+            "dataType": "string",
+            "sourceColumn": "conducta_key",
+            "lineageTag": "b0df33fb-11b2-5845-a98d-5fc0c1cc7e09",
+            "isHidden": true
+          },
+          {
+            "name": "victima_key",
+            "dataType": "string",
+            "sourceColumn": "victima_key",
+            "lineageTag": "16b0bd78-95dd-51eb-b01b-5c9542e921fb",
+            "isHidden": true
+          },
+          {
+            "name": "zona",
+            "dataType": "string",
+            "sourceColumn": "zona",
+            "lineageTag": "f8e423a0-a12b-57d3-93c4-d05f6bb6ac87"
+          },
+          {
+            "name": "armas_medios",
+            "dataType": "string",
+            "sourceColumn": "armas_medios",
+            "lineageTag": "79d66733-5562-5e21-aaa5-2b4f07a6dc8b"
+          },
+          {
+            "name": "movil_agresor",
+            "dataType": "string",
+            "sourceColumn": "movil_agresor",
+            "lineageTag": "35a1cbd4-bf9d-5725-9823-b11e5f5455be"
+          },
+          {
+            "name": "movil_victima",
+            "dataType": "string",
+            "sourceColumn": "movil_victima",
+            "lineageTag": "5f7a0d69-f62b-5f5a-b8f6-aa97955581fd"
+          },
+          {
+            "name": "latitud",
+            "dataType": "double",
+            "sourceColumn": "latitud",
+            "lineageTag": "e7f305e8-8cc8-5ef6-ad5d-776ff55b552c",
+            "dataCategory": "Latitude",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "longitud",
+            "dataType": "double",
+            "sourceColumn": "longitud",
+            "lineageTag": "804434c4-a0fa-53b3-b8e8-9c70865e531e",
+            "dataCategory": "Longitude",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "flag_coord_faltante",
+            "dataType": "boolean",
+            "sourceColumn": "flag_coord_faltante",
+            "lineageTag": "5d3d8f5a-b473-5259-9076-6647a7f0d32f"
+          },
+          {
+            "name": "flag_dia_atipico",
+            "dataType": "boolean",
+            "sourceColumn": "flag_dia_atipico",
+            "lineageTag": "b783ecfb-9b45-516f-a1d7-fded3bf8bb06"
+          },
+          {
+            "name": "flag_barrio_atipico",
+            "dataType": "boolean",
+            "sourceColumn": "flag_barrio_atipico",
+            "lineageTag": "e01283dd-3f0a-5415-aba4-7c7fb743ba32"
+          },
+          {
+            "name": "flag_barrio_comuna",
+            "dataType": "boolean",
+            "sourceColumn": "flag_barrio_comuna",
+            "lineageTag": "cdc4466b-3d9f-58dc-8868-63ad8bc6001b"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "vw_fact_delitos",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = PostgreSQL.Database(Servidor, BaseDatos),",
+                "    Vista = Origen{[Schema=\"public\",Item=\"vw_fact_delitos\"]}[Data]",
+                "in",
+                "    Vista"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Total delitos",
+            "expression": "COUNTROWS ( vw_fact_delitos )",
+            "lineageTag": "3c627fa1-df1b-5d7e-912a-0998ede88afc",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Total año anterior",
+            "expression": "CALCULATE ( [Total delitos], SAMEPERIODLASTYEAR ( vw_dim_tiempo[fecha] ) )",
+            "lineageTag": "84152e6c-c8bf-5620-9207-bbd267167fb5",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Variación % anual",
+            "expression": "DIVIDE ( [Total delitos] - [Total año anterior], [Total año anterior] )",
+            "lineageTag": "4eb4e7a6-78d3-5107-bd70-dd307f54ff4c",
+            "formatString": "0.0 %;-0.0 %;0.0 %"
+          },
+          {
+            "name": "% hurto",
+            "expression": "DIVIDE (\n    CALCULATE ( [Total delitos], vw_dim_conducta[grupo_delito] = \"HURTO\" ),\n    CALCULATE ( [Total delitos], REMOVEFILTERS ( vw_dim_conducta ) )\n)",
+            "lineageTag": "692ab367-6b64-5028-89c4-b0b688846920",
+            "formatString": "0.0 %;-0.0 %;0.0 %"
+          },
+          {
+            "name": "% SIN DATO (género)",
+            "expression": "DIVIDE (\n    CALCULATE ( [Total delitos], vw_dim_victima[genero] = \"SIN DATO\" ),\n    CALCULATE ( [Total delitos], REMOVEFILTERS ( vw_dim_victima[genero] ) )\n)",
+            "lineageTag": "f2a9d184-e84d-5de7-8af0-d23c603c8868",
+            "formatString": "0.0 %;-0.0 %;0.0 %"
+          },
+          {
+            "name": "Comuna con más casos",
+            "expression": "VAR t = ADDCOLUMNS ( VALUES ( vw_dim_territorio[comuna] ), \"@n\", [Total delitos] )\nRETURN MAXX ( TOPN ( 1, t, [@n], DESC ), vw_dim_territorio[comuna] )",
+            "lineageTag": "479ed822-4267-58b8-b2f0-5fbad4ba4382"
+          },
+          {
+            "name": "Participación comuna con más casos",
+            "expression": "VAR t = ADDCOLUMNS ( VALUES ( vw_dim_territorio[comuna] ), \"@n\", [Total delitos] )\nRETURN DIVIDE ( MAXX ( t, [@n] ), [Total delitos] )",
+            "lineageTag": "2cdd9092-4dbd-5e20-aa9e-a70de77fca2b",
+            "formatString": "0.0 %;-0.0 %;0.0 %"
+          },
+          {
+            "name": "Promedio diario",
+            "expression": "DIVIDE ( [Total delitos], COUNTROWS ( vw_dim_tiempo ) )",
+            "lineageTag": "420aa38d-d506-5ce2-8733-eb12800083f1",
+            "formatString": "#,0.0"
+          }
+        ]
+      },
+      {
+        "name": "vw_dim_tiempo",
+        "lineageTag": "cede4920-af9d-569b-9151-fc19c76d907b",
+        "columns": [
+          {
+            "name": "fecha",
+            "dataType": "dateTime",
+            "sourceColumn": "fecha",
+            "lineageTag": "02988e0e-3551-582a-8334-264880f08d2e",
+            "formatString": "dd/mm/yyyy",
+            "isKey": true
+          },
+          {
+            "name": "anio",
+            "dataType": "int64",
+            "sourceColumn": "anio",
+            "lineageTag": "4544b795-4a22-5df4-a60d-91af4008b453",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "trimestre",
+            "dataType": "int64",
+            "sourceColumn": "trimestre",
+            "lineageTag": "3227823b-059a-5568-8a58-26e33dfd44b6",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "mes",
+            "dataType": "int64",
+            "sourceColumn": "mes",
+            "lineageTag": "52249a38-1b89-5000-9940-93e4f392db40",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "mes_nombre",
+            "dataType": "string",
+            "sourceColumn": "mes_nombre",
+            "lineageTag": "61f6252a-b822-5c8c-ba42-e65adeca58a5",
+            "sortByColumn": "mes"
+          },
+          {
+            "name": "anio_mes",
+            "dataType": "string",
+            "sourceColumn": "anio_mes",
+            "lineageTag": "1f35fbb6-fd40-589f-bb79-606615a86b26"
+          },
+          {
+            "name": "dia",
+            "dataType": "int64",
+            "sourceColumn": "dia",
+            "lineageTag": "964e9936-b186-53ca-996b-4d7b1cad1804",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "dia_semana",
+            "dataType": "int64",
+            "sourceColumn": "dia_semana",
+            "lineageTag": "51874e94-42a0-5f96-964d-488166a04813",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "name": "dia_semana_nombre",
+            "dataType": "string",
+            "sourceColumn": "dia_semana_nombre",
+            "lineageTag": "5b7c61f9-caa3-5894-ad9e-0ddfab88ec41",
+            "sortByColumn": "dia_semana"
+          },
+          {
+            "name": "fin_de_semana",
+            "dataType": "boolean",
+            "sourceColumn": "fin_de_semana",
+            "lineageTag": "11073a42-26d3-591a-b24d-a1e19eeb1c1f"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "vw_dim_tiempo",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = PostgreSQL.Database(Servidor, BaseDatos),",
+                "    Vista = Origen{[Schema=\"public\",Item=\"vw_dim_tiempo\"]}[Data]",
+                "in",
+                "    Vista"
+              ]
+            }
+          }
+        ],
+        "dataCategory": "Time"
+      },
+      {
+        "name": "vw_dim_territorio",
+        "lineageTag": "a0fde137-3301-591c-8516-bb46cca7a609",
+        "columns": [
+          {
+            "name": "territorio_key",
+            "dataType": "string",
+            "sourceColumn": "territorio_key",
+            "lineageTag": "b8d66cb3-0de2-5633-924f-9df4e018ff2f",
+            "isHidden": true
+          },
+          {
+            "name": "comuna",
+            "dataType": "string",
+            "sourceColumn": "comuna",
+            "lineageTag": "e4dd3c4a-fa5a-55bc-96fb-1d9251457532"
+          },
+          {
+            "name": "barrio",
+            "dataType": "string",
+            "sourceColumn": "barrio",
+            "lineageTag": "c51a39aa-355f-5285-a157-2085cafdd495"
+          },
+          {
+            "name": "tipo_territorio",
+            "dataType": "string",
+            "sourceColumn": "tipo_territorio",
+            "lineageTag": "107a991b-2ce9-5ff4-9a93-9c8d71e08636"
+          },
+          {
+            "name": "comuna_numero",
+            "dataType": "int64",
+            "sourceColumn": "comuna_numero",
+            "lineageTag": "4cd3565a-f5f2-5a51-b674-ffa138f62c87",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "vw_dim_territorio",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = PostgreSQL.Database(Servidor, BaseDatos),",
+                "    Vista = Origen{[Schema=\"public\",Item=\"vw_dim_territorio\"]}[Data]",
+                "in",
+                "    Vista"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "vw_dim_conducta",
+        "lineageTag": "7eaede10-263a-5e0f-9c14-da5e71bc4fab",
+        "columns": [
+          {
+            "name": "conducta_key",
+            "dataType": "string",
+            "sourceColumn": "conducta_key",
+            "lineageTag": "54077c7d-ee13-54df-90a0-d093d0397f03",
+            "isHidden": true
+          },
+          {
+            "name": "conducta",
+            "dataType": "string",
+            "sourceColumn": "conducta",
+            "lineageTag": "ae4d6892-2625-5b64-acea-95986faa79d9"
+          },
+          {
+            "name": "descripcion_conducta",
+            "dataType": "string",
+            "sourceColumn": "descripcion_conducta",
+            "lineageTag": "9b92c671-abba-5944-963f-1b36200291b6"
+          },
+          {
+            "name": "grupo_delito",
+            "dataType": "string",
+            "sourceColumn": "grupo_delito",
+            "lineageTag": "9f5c2e0d-accd-5aa3-9e96-58f5d936860d"
+          },
+          {
+            "name": "clasificacion_delito",
+            "dataType": "string",
+            "sourceColumn": "clasificacion_delito",
+            "lineageTag": "5723db90-1396-5bca-87dd-12779247ac1b"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "vw_dim_conducta",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = PostgreSQL.Database(Servidor, BaseDatos),",
+                "    Vista = Origen{[Schema=\"public\",Item=\"vw_dim_conducta\"]}[Data]",
+                "in",
+                "    Vista"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "vw_dim_victima",
+        "lineageTag": "e894a6f6-476a-5f6c-bdcc-ed8e4b0fd1e1",
+        "columns": [
+          {
+            "name": "victima_key",
+            "dataType": "string",
+            "sourceColumn": "victima_key",
+            "lineageTag": "f89aff98-7783-523c-b700-29a7f51f0a57",
+            "isHidden": true
+          },
+          {
+            "name": "genero",
+            "dataType": "string",
+            "sourceColumn": "genero",
+            "lineageTag": "8d240f10-94be-504b-b7de-5e60011bd4fd"
+          },
+          {
+            "name": "curso_vida",
+            "dataType": "string",
+            "sourceColumn": "curso_vida",
+            "lineageTag": "95f01334-d1b9-5b58-b460-89e5880c0dfc"
+          },
+          {
+            "name": "estado_civil",
+            "dataType": "string",
+            "sourceColumn": "estado_civil",
+            "lineageTag": "46d9f4f2-429d-5032-ba55-5237e937f59d"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "vw_dim_victima",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Origen = PostgreSQL.Database(Servidor, BaseDatos),",
+                "    Vista = Origen{[Schema=\"public\",Item=\"vw_dim_victima\"]}[Data]",
+                "in",
+                "    Vista"
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "name": "r_fecha_hecho",
+        "fromTable": "vw_fact_delitos",
+        "fromColumn": "fecha_hecho",
+        "toTable": "vw_dim_tiempo",
+        "toColumn": "fecha"
+      },
+      {
+        "name": "r_territorio_key",
+        "fromTable": "vw_fact_delitos",
+        "fromColumn": "territorio_key",
+        "toTable": "vw_dim_territorio",
+        "toColumn": "territorio_key"
+      },
+      {
+        "name": "r_conducta_key",
+        "fromTable": "vw_fact_delitos",
+        "fromColumn": "conducta_key",
+        "toTable": "vw_dim_conducta",
+        "toColumn": "conducta_key"
+      },
+      {
+        "name": "r_victima_key",
+        "fromTable": "vw_fact_delitos",
+        "fromColumn": "victima_key",
+        "toTable": "vw_dim_victima",
+        "toColumn": "victima_key"
+      }
+    ],
+    "expressions": [
+      {
+        "name": "Servidor",
+        "kind": "m",
+        "expression": "\"ep-xxxx-xxxx.us-east-2.aws.neon.tech\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+        "lineageTag": "df6291cb-9fcc-5368-8e5e-2ace21a7106c"
+      },
+      {
+        "name": "BaseDatos",
+        "kind": "m",
+        "expression": "\"neondb\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+        "lineageTag": "b81be40a-7b76-5ea3-ac12-ffec51f28f3b"
+      }
+    ],
+    "annotations": [
+      {
+        "name": "PBI_QueryOrder",
+        "value": "[\"Servidor\", \"BaseDatos\", \"vw_fact_delitos\", \"vw_dim_tiempo\", \"vw_dim_territorio\", \"vw_dim_conducta\", \"vw_dim_victima\"]"
+      },
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "0"
+      }
+    ]
+  }
+}

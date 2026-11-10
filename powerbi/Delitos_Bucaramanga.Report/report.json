@@ -1,0 +1,143 @@
+{
+  "config": "{\"version\": \"5.43\", \"themeCollection\": {}, \"activeSectionIndex\": 0, \"defaultDrillFilterOtherVisuals\": true, \"settings\": {\"useNewFilterPaneExperience\": true, \"allowChangeFilterTypes\": true, \"useStylableVisualContainerHeader\": true, \"exportDataMode\": 1, \"useEnhancedTooltips\": true}}",
+  "layoutOptimization": 0,
+  "sections": [
+    {
+      "name": "ReportSectionTablero",
+      "displayName": "Tablero",
+      "displayOption": 1,
+      "width": 1280,
+      "height": 720,
+      "config": "{}",
+      "filters": "[]",
+      "visualContainers": [
+        {
+          "x": 20,
+          "y": 20,
+          "z": 0,
+          "width": 190,
+          "height": 100,
+          "config": "{\"name\": \"kpi_total\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 20, \"z\": 0, \"width\": 190, \"height\": 100}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"vw_fact_delitos.Total delitos\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"f\", \"Entity\": \"vw_fact_delitos\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"f\"}}, \"Property\": \"Total delitos\"}, \"Name\": \"vw_fact_delitos.Total delitos\"}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 220,
+          "y": 20,
+          "z": 0,
+          "width": 190,
+          "height": 100,
+          "config": "{\"name\": \"kpi_var\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 220, \"y\": 20, \"z\": 0, \"width\": 190, \"height\": 100}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"vw_fact_delitos.Variación % anual\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"f\", \"Entity\": \"vw_fact_delitos\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"f\"}}, \"Property\": \"Variación % anual\"}, \"Name\": \"vw_fact_delitos.Variación % anual\"}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 420,
+          "y": 20,
+          "z": 0,
+          "width": 190,
+          "height": 100,
+          "config": "{\"name\": \"kpi_hurto\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 420, \"y\": 20, \"z\": 0, \"width\": 190, \"height\": 100}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"vw_fact_delitos.% hurto\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"f\", \"Entity\": \"vw_fact_delitos\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"f\"}}, \"Property\": \"% hurto\"}, \"Name\": \"vw_fact_delitos.% hurto\"}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 620,
+          "y": 20,
+          "z": 0,
+          "width": 190,
+          "height": 100,
+          "config": "{\"name\": \"kpi_sindato\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 620, \"y\": 20, \"z\": 0, \"width\": 190, \"height\": 100}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"vw_fact_delitos.% SIN DATO (género)\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"f\", \"Entity\": \"vw_fact_delitos\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"f\"}}, \"Property\": \"% SIN DATO (género)\"}, \"Name\": \"vw_fact_delitos.% SIN DATO (género)\"}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 820,
+          "y": 20,
+          "z": 0,
+          "width": 240,
+          "height": 100,
+          "config": "{\"name\": \"kpi_comuna\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 820, \"y\": 20, \"z\": 0, \"width\": 240, \"height\": 100}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"vw_fact_delitos.Comuna con más casos\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"f\", \"Entity\": \"vw_fact_delitos\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"f\"}}, \"Property\": \"Comuna con más casos\"}, \"Name\": \"vw_fact_delitos.Comuna con más casos\"}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 1070,
+          "y": 20,
+          "z": 0,
+          "width": 190,
+          "height": 100,
+          "config": "{\"name\": \"kpi_part\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 1070, \"y\": 20, \"z\": 0, \"width\": 190, \"height\": 100}}], \"singleVisual\": {\"visualType\": \"card\", \"projections\": {\"Values\": [{\"queryRef\": \"vw_fact_delitos.Participación comuna con más casos\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"f\", \"Entity\": \"vw_fact_delitos\", \"Type\": 0}], \"Select\": [{\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"f\"}}, \"Property\": \"Participación comuna con más casos\"}, \"Name\": \"vw_fact_delitos.Participación comuna con más casos\"}]}, \"drillFilterOtherVisuals\": true}}",
+          "filters": "[]"
+        },
+        {
+          "x": 20,
+          "y": 135,
+          "z": 0,
+          "width": 300,
+          "height": 70,
+          "config": "{\"name\": \"seg_anio\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 135, \"z\": 0, \"width\": 300, \"height\": 70}}], \"singleVisual\": {\"visualType\": \"slicer\", \"projections\": {\"Values\": [{\"queryRef\": \"vw_dim_tiempo.anio\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t\", \"Entity\": \"vw_dim_tiempo\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t\"}}, \"Property\": \"anio\"}, \"Name\": \"vw_dim_tiempo.anio\"}]}, \"drillFilterOtherVisuals\": true, \"objects\": {\"data\": [{\"properties\": {\"mode\": {\"expr\": {\"Literal\": {\"Value\": \"'Between'\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Año'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 330,
+          "y": 135,
+          "z": 0,
+          "width": 300,
+          "height": 70,
+          "config": "{\"name\": \"seg_comuna\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 330, \"y\": 135, \"z\": 0, \"width\": 300, \"height\": 70}}], \"singleVisual\": {\"visualType\": \"slicer\", \"projections\": {\"Values\": [{\"queryRef\": \"vw_dim_territorio.comuna\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"r\", \"Entity\": \"vw_dim_territorio\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"r\"}}, \"Property\": \"comuna\"}, \"Name\": \"vw_dim_territorio.comuna\"}]}, \"drillFilterOtherVisuals\": true, \"objects\": {\"data\": [{\"properties\": {\"mode\": {\"expr\": {\"Literal\": {\"Value\": \"'Dropdown'\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Comuna'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 640,
+          "y": 135,
+          "z": 0,
+          "width": 300,
+          "height": 70,
+          "config": "{\"name\": \"seg_grupo\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 640, \"y\": 135, \"z\": 0, \"width\": 300, \"height\": 70}}], \"singleVisual\": {\"visualType\": \"slicer\", \"projections\": {\"Values\": [{\"queryRef\": \"vw_dim_conducta.grupo_delito\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"c\", \"Entity\": \"vw_dim_conducta\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"c\"}}, \"Property\": \"grupo_delito\"}, \"Name\": \"vw_dim_conducta.grupo_delito\"}]}, \"drillFilterOtherVisuals\": true, \"objects\": {\"data\": [{\"properties\": {\"mode\": {\"expr\": {\"Literal\": {\"Value\": \"'Dropdown'\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Grupo de delito'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 950,
+          "y": 135,
+          "z": 0,
+          "width": 310,
+          "height": 70,
+          "config": "{\"name\": \"seg_genero\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 950, \"y\": 135, \"z\": 0, \"width\": 310, \"height\": 70}}], \"singleVisual\": {\"visualType\": \"slicer\", \"projections\": {\"Values\": [{\"queryRef\": \"vw_dim_victima.genero\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"v\", \"Entity\": \"vw_dim_victima\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"v\"}}, \"Property\": \"genero\"}, \"Name\": \"vw_dim_victima.genero\"}]}, \"drillFilterOtherVisuals\": true, \"objects\": {\"data\": [{\"properties\": {\"mode\": {\"expr\": {\"Literal\": {\"Value\": \"'Dropdown'\"}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Género de la víctima'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 20,
+          "y": 220,
+          "z": 0,
+          "width": 760,
+          "height": 230,
+          "config": "{\"name\": \"serie_mensual\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 220, \"z\": 0, \"width\": 760, \"height\": 230}}], \"singleVisual\": {\"visualType\": \"lineChart\", \"projections\": {\"Category\": [{\"queryRef\": \"vw_dim_tiempo.anio_mes\"}], \"Y\": [{\"queryRef\": \"vw_fact_delitos.Total delitos\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t\", \"Entity\": \"vw_dim_tiempo\", \"Type\": 0}, {\"Name\": \"f\", \"Entity\": \"vw_fact_delitos\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t\"}}, \"Property\": \"anio_mes\"}, \"Name\": \"vw_dim_tiempo.anio_mes\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"f\"}}, \"Property\": \"Total delitos\"}, \"Name\": \"vw_fact_delitos.Total delitos\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Delitos por mes'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 790,
+          "y": 220,
+          "z": 0,
+          "width": 470,
+          "height": 230,
+          "config": "{\"name\": \"barras_grupo\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 790, \"y\": 220, \"z\": 0, \"width\": 470, \"height\": 230}}], \"singleVisual\": {\"visualType\": \"clusteredBarChart\", \"projections\": {\"Category\": [{\"queryRef\": \"vw_dim_conducta.grupo_delito\"}], \"Y\": [{\"queryRef\": \"vw_fact_delitos.Total delitos\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"c\", \"Entity\": \"vw_dim_conducta\", \"Type\": 0}, {\"Name\": \"f\", \"Entity\": \"vw_fact_delitos\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"c\"}}, \"Property\": \"grupo_delito\"}, \"Name\": \"vw_dim_conducta.grupo_delito\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"f\"}}, \"Property\": \"Total delitos\"}, \"Name\": \"vw_fact_delitos.Total delitos\"}], \"OrderBy\": [{\"Direction\": 2, \"Expression\": {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"f\"}}, \"Property\": \"Total delitos\"}}}]}, \"drillFilterOtherVisuals\": true, \"objects\": {\"dataPoint\": [{\"properties\": {\"fill\": {\"solid\": {\"color\": {\"expr\": {\"Literal\": {\"Value\": \"'#2a78d6'\"}}}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Delitos por grupo'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 20,
+          "y": 460,
+          "z": 0,
+          "width": 470,
+          "height": 250,
+          "config": "{\"name\": \"barras_comuna\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 20, \"y\": 460, \"z\": 0, \"width\": 470, \"height\": 250}}], \"singleVisual\": {\"visualType\": \"clusteredBarChart\", \"projections\": {\"Category\": [{\"queryRef\": \"vw_dim_territorio.comuna\"}], \"Y\": [{\"queryRef\": \"vw_fact_delitos.Total delitos\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"r\", \"Entity\": \"vw_dim_territorio\", \"Type\": 0}, {\"Name\": \"f\", \"Entity\": \"vw_fact_delitos\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"r\"}}, \"Property\": \"comuna\"}, \"Name\": \"vw_dim_territorio.comuna\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"f\"}}, \"Property\": \"Total delitos\"}, \"Name\": \"vw_fact_delitos.Total delitos\"}], \"OrderBy\": [{\"Direction\": 2, \"Expression\": {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"f\"}}, \"Property\": \"Total delitos\"}}}]}, \"drillFilterOtherVisuals\": true, \"objects\": {\"dataPoint\": [{\"properties\": {\"fill\": {\"solid\": {\"color\": {\"expr\": {\"Literal\": {\"Value\": \"'#2a78d6'\"}}}}}}}]}, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Delitos por comuna'\"}}}}}]}}}",
+          "filters": "[]"
+        },
+        {
+          "x": 500,
+          "y": 460,
+          "z": 0,
+          "width": 760,
+          "height": 250,
+          "config": "{\"name\": \"matriz_mes_anio\", \"layouts\": [{\"id\": 0, \"position\": {\"x\": 500, \"y\": 460, \"z\": 0, \"width\": 760, \"height\": 250}}], \"singleVisual\": {\"visualType\": \"pivotTable\", \"projections\": {\"Rows\": [{\"queryRef\": \"vw_dim_tiempo.mes_nombre\"}], \"Columns\": [{\"queryRef\": \"vw_dim_tiempo.anio\"}], \"Values\": [{\"queryRef\": \"vw_fact_delitos.Total delitos\"}]}, \"prototypeQuery\": {\"Version\": 2, \"From\": [{\"Name\": \"t\", \"Entity\": \"vw_dim_tiempo\", \"Type\": 0}, {\"Name\": \"f\", \"Entity\": \"vw_fact_delitos\", \"Type\": 0}], \"Select\": [{\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t\"}}, \"Property\": \"mes_nombre\"}, \"Name\": \"vw_dim_tiempo.mes_nombre\"}, {\"Column\": {\"Expression\": {\"SourceRef\": {\"Source\": \"t\"}}, \"Property\": \"anio\"}, \"Name\": \"vw_dim_tiempo.anio\"}, {\"Measure\": {\"Expression\": {\"SourceRef\": {\"Source\": \"f\"}}, \"Property\": \"Total delitos\"}, \"Name\": \"vw_fact_delitos.Total delitos\"}]}, \"drillFilterOtherVisuals\": true, \"vcObjects\": {\"title\": [{\"properties\": {\"show\": {\"expr\": {\"Literal\": {\"Value\": \"true\"}}}, \"text\": {\"expr\": {\"Literal\": {\"Value\": \"'Delitos por mes y año'\"}}}}}]}}}",
+          "filters": "[]"
+        }
+      ]
+    }
+  ]
+}
