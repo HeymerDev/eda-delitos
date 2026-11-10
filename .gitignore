@@ -23,3 +23,8 @@ Thumbs.db
 
 # Configuración local de herramientas
 .claude/
+
+# Copia local del proyecto de Power BI (contiene el servidor de Neon) y cachés de Power BI Desktop
+powerbi_local/
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
