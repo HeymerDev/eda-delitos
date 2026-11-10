@@ -183,6 +183,13 @@ MEDIDAS = [
     ("Total delitos", "COUNTROWS ( vw_fact_delitos )", "#,0"),
     ("Total año anterior", "CALCULATE ( [Total delitos], SAMEPERIODLASTYEAR ( vw_dim_tiempo[fecha] ) )", "#,0"),
     ("Variación % anual", "DIVIDE ( [Total delitos] - [Total año anterior], [Total año anterior] )", PCT),
+    # Para una tarjeta: compara el último año visible (según el segmentador) con el año anterior. Con todo el
+    # periodo, la medida anterior compararía 2010–2021 con el periodo desplazado un año, lo que no es útil.
+    ("Variación % último año",
+     "VAR ultimo = MAX ( vw_dim_tiempo[anio] )\n"
+     "VAR actual = CALCULATE ( [Total delitos], vw_dim_tiempo[anio] = ultimo )\n"
+     "VAR anterior = CALCULATE ( [Total delitos], vw_dim_tiempo[anio] = ultimo - 1 )\n"
+     "RETURN DIVIDE ( actual - anterior, anterior )", "+0.0 %;-0.0 %;0.0 %"),
     ("% hurto",
      "DIVIDE (\n    CALCULATE ( [Total delitos], vw_dim_conducta[grupo_delito] = \"HURTO\" ),\n"
      "    CALCULATE ( [Total delitos], REMOVEFILTERS ( vw_dim_conducta ) )\n)", PCT),
@@ -227,6 +234,11 @@ def modelo(servidor: str, base: str) -> dict:
         }
         if nombre == "vw_dim_tiempo":
             tabla["dataCategory"] = "Time"  # marcada como tabla de fechas (columna clave: fecha)
+            # Primer día del mes: eje de fechas continuo para la serie mensual (sin barra de desplazamiento)
+            cols.append({"type": "calculated", "name": "inicio_mes", "dataType": "dateTime",
+                         "expression": "DATE ( vw_dim_tiempo[anio], vw_dim_tiempo[mes], 1 )",
+                         "formatString": "mmm yyyy", "summarizeBy": "none",
+                         "lineageTag": str(uuid.uuid5(uuid.NAMESPACE_URL, "vw_dim_tiempo.inicio_mes"))})
         if nombre == FACT:
             tabla["measures"] = [
                 {"name": n, "expression": e, "lineageTag": str(uuid.uuid5(uuid.NAMESPACE_URL, f"medida.{n}")),
@@ -338,40 +350,56 @@ def _degradado_matriz() -> dict:
     }]}
 
 
+ALTO_PAGINA = 960  # página más alta que 720 para ver las 20 comunas, los 9 grupos y los 12 meses sin desplazarse
+
+
 def informe() -> dict:
     T, R, C, V = "vw_dim_tiempo", "vw_dim_territorio", "vw_dim_conducta", "vw_dim_victima"
-    color_barras = {"dataPoint": [{"properties": {"fill": {"solid": {"color": _lit(f"'{ROJO_ALERTA}'")}}}}]}
-    color_linea = {"dataPoint": [{"properties": {"fill": {"solid": {"color": _lit(f"'{ROJO_ALERTA}'")}}}}],
-                   "lineStyles": [{"properties": {"strokeWidth": _lit("3D")}}]}
-    lista_desplegable = {"data": [{"properties": {"mode": _lit("'Dropdown'")}}]}
+    relleno = {"dataPoint": [{"properties": {"fill": {"solid": {"color": _lit(f"'{ROJO_ALERTA}'")}}}}]}
+    # Cifras completas (130.297 y no «130 mil») en tarjetas y ejes
+    cifra_completa = {"labels": [{"properties": {"labelDisplayUnits": _lit("1D")}}]}
+    eje_completo = {"valueAxis": [{"properties": {"labelDisplayUnits": _lit("1D")}}]}
+    # Más espacio para las etiquetas de categoría largas («LESIONES EN ACCIDENTE DE TRANSITO»)
+    etiquetas_largas = {"categoryAxis": [{"properties": {"maxMarginFactor": _lit("50D")}}]}
+    # Segmentadores: sin el encabezado con el nombre técnico del campo; el título del visual lo reemplaza
+    sin_encabezado = {"header": [{"properties": {"show": _lit("false")}}]}
+    desplegable = {**sin_encabezado, "data": [{"properties": {"mode": _lit("'Dropdown'")}}]}
+    linea = {**relleno, **eje_completo,
+             "lineStyles": [{"properties": {"strokeWidth": _lit("3D")}}],
+             "categoryAxis": [{"properties": {"axisType": _lit("'Scalar'")}}]}  # eje de fechas continuo
+
     visuales = [
-        # Fila de indicadores
-        _visual("kpi_total", "card", (20, 20, 190, 100), {"Values": [(FACT, "Total delitos", True)]}),
-        _visual("kpi_var", "card", (220, 20, 190, 100), {"Values": [(FACT, "Variación % anual", True)]}),
-        _visual("kpi_hurto", "card", (420, 20, 190, 100), {"Values": [(FACT, "% hurto", True)]}),
-        _visual("kpi_sindato", "card", (620, 20, 190, 100), {"Values": [(FACT, "% SIN DATO (género)", True)]}),
-        _visual("kpi_comuna", "card", (820, 20, 240, 100), {"Values": [(FACT, "Comuna con más casos", True)]}),
-        _visual("kpi_part", "card", (1070, 20, 190, 100), {"Values": [(FACT, "Participación comuna con más casos", True)]}),
+        # Fila de indicadores (x, y, ancho, alto)
+        _visual("kpi_total", "card", (15, 15, 175, 95), {"Values": [(FACT, "Total delitos", True)]},
+                objetos=cifra_completa),
+        _visual("kpi_var", "card", (200, 15, 195, 95), {"Values": [(FACT, "Variación % último año", True)]}),
+        _visual("kpi_hurto", "card", (405, 15, 150, 95), {"Values": [(FACT, "% hurto", True)]}),
+        _visual("kpi_sindato", "card", (565, 15, 180, 95), {"Values": [(FACT, "% SIN DATO (género)", True)]}),
+        _visual("kpi_comuna", "card", (755, 15, 290, 95), {"Values": [(FACT, "Comuna con más casos", True)]},
+                objetos={"labels": [{"properties": {"fontSize": _lit("20D")}}]}),
+        _visual("kpi_part", "card", (1055, 15, 210, 95),
+                {"Values": [(FACT, "Participación comuna con más casos", True)]}),
         # Segmentadores
-        _visual("seg_anio", "slicer", (20, 135, 300, 70), {"Values": [(T, "anio", False)]}, "Año",
-                objetos={"data": [{"properties": {"mode": _lit("'Between'")}}]}),
-        _visual("seg_comuna", "slicer", (330, 135, 300, 70), {"Values": [(R, "comuna", False)]}, "Comuna",
-                objetos=lista_desplegable),
-        _visual("seg_grupo", "slicer", (640, 135, 300, 70), {"Values": [(C, "grupo_delito", False)]}, "Grupo de delito",
-                objetos=lista_desplegable),
-        _visual("seg_genero", "slicer", (950, 135, 310, 70), {"Values": [(V, "genero", False)]}, "Género de la víctima",
-                objetos=lista_desplegable),
+        _visual("seg_anio", "slicer", (15, 120, 305, 85), {"Values": [(T, "anio", False)]}, "Año",
+                objetos={**sin_encabezado, "data": [{"properties": {"mode": _lit("'Between'")}}]}),
+        _visual("seg_comuna", "slicer", (330, 120, 305, 85), {"Values": [(R, "comuna", False)]}, "Comuna",
+                objetos=desplegable),
+        _visual("seg_grupo", "slicer", (645, 120, 305, 85), {"Values": [(C, "grupo_delito", False)]},
+                "Grupo de delito", objetos=desplegable),
+        _visual("seg_genero", "slicer", (960, 120, 305, 85), {"Values": [(V, "genero", False)]},
+                "Género de la víctima", objetos=desplegable),
         # Visualizaciones
-        _visual("serie_mensual", "lineChart", (20, 220, 760, 230),
-                {"Category": [(T, "anio_mes", False)], "Y": [(FACT, "Total delitos", True)]}, "Delitos por mes",
-                objetos=color_linea),
-        _visual("barras_grupo", "clusteredBarChart", (790, 220, 470, 230),
+        _visual("serie_mensual", "lineChart", (15, 215, 785, 290),
+                {"Category": [(T, "inicio_mes", False)], "Y": [(FACT, "Total delitos", True)]}, "Delitos por mes",
+                objetos=linea),
+        _visual("barras_grupo", "clusteredBarChart", (810, 215, 455, 290),
                 {"Category": [(C, "grupo_delito", False)], "Y": [(FACT, "Total delitos", True)]}, "Delitos por grupo",
-                ordenar_por=(FACT, "Total delitos", True), objetos=_color_por_grupo()),
-        _visual("barras_comuna", "clusteredBarChart", (20, 460, 470, 250),
+                ordenar_por=(FACT, "Total delitos", True),
+                objetos={**_color_por_grupo(), **eje_completo, **etiquetas_largas}),
+        _visual("barras_comuna", "clusteredBarChart", (15, 515, 455, 430),
                 {"Category": [(R, "comuna", False)], "Y": [(FACT, "Total delitos", True)]}, "Delitos por comuna",
-                ordenar_por=(FACT, "Total delitos", True), objetos=color_barras),
-        _visual("matriz_mes_anio", "pivotTable", (500, 460, 760, 250),
+                ordenar_por=(FACT, "Total delitos", True), objetos={**relleno, **eje_completo, **etiquetas_largas}),
+        _visual("matriz_mes_anio", "pivotTable", (480, 515, 785, 430),
                 {"Rows": [(T, "mes_nombre", False)], "Columns": [(T, "anio", False)],
                  "Values": [(FACT, "Total delitos", True)]}, "Delitos por mes y año", objetos=_degradado_matriz()),
     ]
@@ -396,7 +424,7 @@ def informe() -> dict:
             "displayName": "Tablero",
             "displayOption": 1,
             "width": 1280,
-            "height": 720,
+            "height": ALTO_PAGINA,
             # Fondo oscuro también en la página (además del tema), por si el tema no se carga
             "config": json.dumps({"objects": {
                 "background": [{"properties": {"color": {"solid": {"color": _lit(f"'{FONDO_PAGINA}'")}},

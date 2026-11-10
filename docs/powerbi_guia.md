@@ -182,6 +182,22 @@ Promedio diario =
 DIVIDE ( [Total delitos], COUNTROWS ( vw_dim_tiempo ) )
 ```
 
+```DAX
+Variación % último año =
+VAR ultimo = MAX ( vw_dim_tiempo[anio] )
+VAR actual = CALCULATE ( [Total delitos], vw_dim_tiempo[anio] = ultimo )
+VAR anterior = CALCULATE ( [Total delitos], vw_dim_tiempo[anio] = ultimo - 1 )
+RETURN DIVIDE ( actual - anterior, anterior )
+```
+
+**Variación anual en una tarjeta.** `Variación % anual` funciona en un visual que tenga el año en el eje. En una
+tarjeta sin filtros compararía todo 2010–2021 con el periodo desplazado un año, y el resultado no es
+interpretable. Por eso la tarjeta usa `Variación % último año`, que compara el último año visible con el año
+anterior. Si el segmentador de año se limita a 2015–2019, por ejemplo, compara 2019 con 2018.
+
+El proyecto también agrega a `vw_dim_tiempo` la columna calculada `inicio_mes = DATE ( [anio], [mes], 1 )`.
+Así la serie mensual usa un eje de fechas continuo y no necesita barra de desplazamiento.
+
 Las medidas de porcentaje se formatean como *Porcentaje* con 1 decimal.
 
 **Notas sobre las medidas:**
@@ -240,8 +256,8 @@ Sin ningún filtro, el tablero debe mostrar estos valores, calculados con el mis
 | % SIN DATO (género) | 11,05 % |
 | Comuna con más casos | 03. SAN FRANCISCO |
 | Participación comuna con más casos | 11,77 % (15.338 delitos) |
-| Variación % anual 2020 | −25,5 % (frente a 2019) |
-| Variación % anual 2021 | +25,3 % (frente a 2020) |
+| Variación % último año (tarjeta, sin filtros) | +25,3 % (2021 frente a 2020) |
+| Variación % último año (con el segmentador de año hasta 2020) | −25,5 % (2020 frente a 2019) |
 
 ## 7. Evidencias para el artículo
 

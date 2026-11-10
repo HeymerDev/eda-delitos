@@ -151,6 +151,12 @@
             "formatString": "0.0 %;-0.0 %;0.0 %"
           },
           {
+            "name": "Variación % último año",
+            "expression": "VAR ultimo = MAX ( vw_dim_tiempo[anio] )\nVAR actual = CALCULATE ( [Total delitos], vw_dim_tiempo[anio] = ultimo )\nVAR anterior = CALCULATE ( [Total delitos], vw_dim_tiempo[anio] = ultimo - 1 )\nRETURN DIVIDE ( actual - anterior, anterior )",
+            "lineageTag": "a9e8b7ad-1dfb-5593-8a65-741517f6849c",
+            "formatString": "+0.0 %;-0.0 %;0.0 %"
+          },
+          {
             "name": "% hurto",
             "expression": "DIVIDE (\n    CALCULATE ( [Total delitos], vw_dim_conducta[grupo_delito] = \"HURTO\" ),\n    CALCULATE ( [Total delitos], REMOVEFILTERS ( vw_dim_conducta ) )\n)",
             "lineageTag": "692ab367-6b64-5028-89c4-b0b688846920",
@@ -255,6 +261,15 @@
             "dataType": "boolean",
             "sourceColumn": "fin_de_semana",
             "lineageTag": "11073a42-26d3-591a-b24d-a1e19eeb1c1f"
+          },
+          {
+            "type": "calculated",
+            "name": "inicio_mes",
+            "dataType": "dateTime",
+            "expression": "DATE ( vw_dim_tiempo[anio], vw_dim_tiempo[mes], 1 )",
+            "formatString": "mmm yyyy",
+            "summarizeBy": "none",
+            "lineageTag": "e768c050-9add-5871-8d0b-a92b4182a95a"
           }
         ],
         "partitions": [
