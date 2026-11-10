@@ -53,11 +53,29 @@ Pasos:
 Si abre el proyecto versionado (`powerbi/`), primero cambie los parámetros `Servidor` y `BaseDatos` en
 *Inicio → Transformar datos → Editar parámetros*.
 
-Los ajustes visuales que el proyecto no incluye se agregan a mano en Power BI:
+El proyecto trae un tema propio, *Seguridad ciudadana*, guardado en
+`Delitos_Bucaramanga.Report/StaticResources/RegisteredResources/TemaSeguridadCiudadana.json`:
 
-- El formato condicional de la matriz (*Formato → Valores de celda → Color de fondo → Escala de colores*).
-- El mapa de Azure Maps.
-- Los colores por grupo de delito.
+- **Fondo:** oscuro, tipo centro de monitoreo.
+- **Cifras de las tarjetas:** en rojo de alerta.
+- **Títulos de los segmentadores:** en ámbar de advertencia.
+- **Un color fijo por grupo de delito**, ordenado por gravedad:
+
+| Grupo | Color |
+|---|---|
+| Homicidio | rojo oscuro `#8E0000` |
+| Homicidio en tránsito | rojo óxido `#BF360C` |
+| Hurto | rojo alerta `#E53935` |
+| Violencia intrafamiliar | magenta `#D81B60` |
+| Delitos sexuales | violeta `#8E24AA` |
+| Lesiones personales | naranja `#FB8C00` |
+| Lesiones en tránsito | ámbar `#FFB300` |
+| Otros / sin dato | grises `#78909C` / `#546E7A` |
+
+La matriz de mes por año trae un degradado de fondo que va del rojo muy oscuro (pocos delitos) al rojo de
+alerta (muchos).
+
+El único ajuste que el proyecto no incluye es el mapa de Azure Maps, que se agrega a mano.
 
 ## 2. Conectar Power BI a Neon sin exponer credenciales
 
@@ -206,9 +224,8 @@ Son los mismos filtros de la aplicación de Streamlit.
 
 **Notas:**
 
-- **Colores:** use los mismos que en la aplicación, con un color fijo por grupo de delito: hurto azul `#2a78d6`,
-  lesiones personales naranja `#eb6834`, lesiones en tránsito verde `#1baf7a`, violencia intrafamiliar amarillo
-  `#eda100` y delitos sexuales rosa `#e87ba4`.
+- **Colores:** use el tema *Seguridad ciudadana* del proyecto, con fondo oscuro, rojo de alerta y un color por
+  grupo de delito. La tabla de colores está en la sección «Atajo».
 - **Mapa:** el visual de Azure Maps puede requerir habilitarse en *Opciones → Seguridad*.
 
 ## 6. Cifras de referencia para validar el tablero

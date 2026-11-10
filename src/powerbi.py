@@ -26,7 +26,7 @@ Uso:
 from __future__ import annotations
 
 import json
-import shutil
+
 import uuid
 from pathlib import Path
 
@@ -37,8 +37,82 @@ SERVIDOR_EJEMPLO = "ep-xxxx-xxxx.us-east-2.aws.neon.tech"
 BASE_EJEMPLO = "neondb"
 FACT = "vw_fact_delitos"
 
-# Colores de la aplicación (mismo color por grupo de delito)
-AZUL = "#2a78d6"
+# -----------------------------------------------------------------------------
+# Tema visual "Seguridad ciudadana": fondo oscuro de centro de monitoreo, rojo de alerta y ámbar de advertencia
+# -----------------------------------------------------------------------------
+FONDO_PAGINA = "#0F1115"
+FONDO_VISUAL = "#1A1D23"
+BORDE = "#2E333B"
+TEXTO = "#E8EAED"
+TEXTO_2 = "#AEB4BC"
+ROJO_ALERTA = "#E53935"
+AMBAR = "#FFB300"
+TEMA = "TemaSeguridadCiudadana.json"
+
+# Un color fijo por grupo de delito, del más grave (rojo oscuro) a los de menor gravedad (grises)
+COLOR_GRUPO = {
+    "HOMICIDIO": "#8E0000",
+    "HOMICIDIO EN ACCIDENTE DE TRANSITO": "#BF360C",
+    "HURTO": "#E53935",
+    "DELITOS SEXUALES": "#8E24AA",
+    "VIOLENCIA INTRAFAMILIAR": "#D81B60",
+    "LESIONES PERSONALES": "#FB8C00",
+    "LESIONES EN ACCIDENTE DE TRANSITO": "#FFB300",
+    "OTROS DELITOS": "#78909C",
+    "SIN DATO": "#546E7A",
+}
+
+
+def _solido(color: str) -> dict:
+    return {"solid": {"color": color}}
+
+
+def tema() -> dict:
+    """Tema de Power BI (JSON de tema de informe)."""
+    ejes = {"labelColor": _solido(TEXTO_2), "titleColor": _solido(TEXTO_2)}
+    return {
+        "name": "Seguridad ciudadana",
+        "dataColors": ["#E53935", "#FFB300", "#D81B60", "#8E24AA", "#FB8C00", "#8E0000", "#78909C", "#BF360C"],
+        "background": FONDO_VISUAL,
+        "foreground": TEXTO,
+        "tableAccent": ROJO_ALERTA,
+        "good": "#43A047", "neutral": AMBAR, "bad": ROJO_ALERTA,
+        "maximum": ROJO_ALERTA, "center": AMBAR, "minimum": "#2B0F12",
+        "textClasses": {
+            "callout": {"fontSize": 26, "fontFace": "Segoe UI Semibold", "color": "#FF5252"},
+            "title": {"fontSize": 12, "fontFace": "Segoe UI Semibold", "color": TEXTO},
+            "header": {"fontSize": 12, "fontFace": "Segoe UI Semibold", "color": AMBAR},
+            "label": {"fontSize": 10, "fontFace": "Segoe UI", "color": TEXTO_2},
+        },
+        "visualStyles": {
+            "*": {"*": {
+                "background": [{"show": True, "color": _solido(FONDO_VISUAL), "transparency": 0}],
+                "border": [{"show": True, "color": _solido(BORDE), "radius": 6}],
+                "title": [{"fontColor": _solido(TEXTO)}],
+                "categoryAxis": [ejes],
+                "valueAxis": [{**ejes, "gridlineColor": _solido(BORDE)}],
+                "legend": [{"labelColor": _solido(TEXTO_2)}],
+            }},
+            "page": {"*": {
+                "background": [{"color": _solido(FONDO_PAGINA), "transparency": 0}],
+                "outspace": [{"color": _solido(FONDO_PAGINA), "transparency": 0}],
+            }},
+            "card": {"*": {
+                "labels": [{"color": _solido("#FF5252")}],
+                "categoryLabels": [{"color": _solido(TEXTO_2)}],
+            }},
+            "slicer": {"*": {
+                "header": [{"fontColor": _solido(AMBAR)}],
+                "items": [{"fontColor": _solido(TEXTO), "background": _solido(FONDO_VISUAL)}],
+            }},
+            "pivotTable": {"*": {
+                "columnHeaders": [{"fontColor": _solido(TEXTO), "backColor": _solido("#3A1014")}],
+                "rowHeaders": [{"fontColor": _solido(TEXTO), "backColor": _solido(FONDO_VISUAL)}],
+                "values": [{"fontColorPrimary": _solido(TEXTO), "backColorPrimary": _solido(FONDO_VISUAL),
+                            "backColorSecondary": _solido(FONDO_VISUAL)}],
+            }},
+        },
+    }
 
 # -----------------------------------------------------------------------------
 # Modelo semántico
@@ -235,9 +309,40 @@ def _visual(nombre: str, tipo: str, pos: tuple[int, int, int, int], roles: dict[
             "filters": "[]"}
 
 
+def _color_por_grupo() -> dict:
+    """dataPoint con un selector por cada grupo de delito: el color sigue al grupo, no a su posición."""
+    reglas = []
+    for grupo, color in COLOR_GRUPO.items():
+        reglas.append({
+            "properties": {"fill": {"solid": {"color": _lit(f"'{color}'")}}},
+            "selector": {"data": [{"scopeId": {"Comparison": {
+                "ComparisonKind": 0,
+                "Left": {"Column": {"Expression": {"SourceRef": {"Entity": "vw_dim_conducta"}}, "Property": "grupo_delito"}},
+                "Right": {"Literal": {"Value": f"'{grupo}'"}},
+            }}}]},
+        })
+    return {"dataPoint": reglas}
+
+
+def _degradado_matriz() -> dict:
+    """Formato condicional de la matriz: fondo de oscuro (pocos delitos) a rojo de alerta (muchos)."""
+    medida = {"Measure": {"Expression": {"SourceRef": {"Entity": FACT}}, "Property": "Total delitos"}}
+    regla = {"FillRule": {"Input": medida, "FillRule": {"linearGradient2": {
+        "min": {"color": {"Literal": {"Value": "'#2B0F12'"}}},
+        "max": {"color": {"Literal": {"Value": f"'{ROJO_ALERTA}'"}}},
+        "nullColoringStrategy": {"strategy": {"Literal": {"Value": "'asZero'"}}},
+    }}}}
+    return {"values": [{
+        "properties": {"backColor": {"solid": {"color": {"expr": regla}}}},
+        "selector": {"data": [{"dataViewWildcard": {"matchingOption": 1}}], "metadata": f"{FACT}.Total delitos"},
+    }]}
+
+
 def informe() -> dict:
     T, R, C, V = "vw_dim_tiempo", "vw_dim_territorio", "vw_dim_conducta", "vw_dim_victima"
-    color_barras = {"dataPoint": [{"properties": {"fill": {"solid": {"color": _lit(f"'{AZUL}'")}}}}]}
+    color_barras = {"dataPoint": [{"properties": {"fill": {"solid": {"color": _lit(f"'{ROJO_ALERTA}'")}}}}]}
+    color_linea = {"dataPoint": [{"properties": {"fill": {"solid": {"color": _lit(f"'{ROJO_ALERTA}'")}}}}],
+                   "lineStyles": [{"properties": {"strokeWidth": _lit("3D")}}]}
     lista_desplegable = {"data": [{"properties": {"mode": _lit("'Dropdown'")}}]}
     visuales = [
         # Fila de indicadores
@@ -258,20 +363,22 @@ def informe() -> dict:
                 objetos=lista_desplegable),
         # Visualizaciones
         _visual("serie_mensual", "lineChart", (20, 220, 760, 230),
-                {"Category": [(T, "anio_mes", False)], "Y": [(FACT, "Total delitos", True)]}, "Delitos por mes"),
+                {"Category": [(T, "anio_mes", False)], "Y": [(FACT, "Total delitos", True)]}, "Delitos por mes",
+                objetos=color_linea),
         _visual("barras_grupo", "clusteredBarChart", (790, 220, 470, 230),
                 {"Category": [(C, "grupo_delito", False)], "Y": [(FACT, "Total delitos", True)]}, "Delitos por grupo",
-                ordenar_por=(FACT, "Total delitos", True), objetos=color_barras),
+                ordenar_por=(FACT, "Total delitos", True), objetos=_color_por_grupo()),
         _visual("barras_comuna", "clusteredBarChart", (20, 460, 470, 250),
                 {"Category": [(R, "comuna", False)], "Y": [(FACT, "Total delitos", True)]}, "Delitos por comuna",
                 ordenar_por=(FACT, "Total delitos", True), objetos=color_barras),
         _visual("matriz_mes_anio", "pivotTable", (500, 460, 760, 250),
                 {"Rows": [(T, "mes_nombre", False)], "Columns": [(T, "anio", False)],
-                 "Values": [(FACT, "Total delitos", True)]}, "Delitos por mes y año"),
+                 "Values": [(FACT, "Total delitos", True)]}, "Delitos por mes y año", objetos=_degradado_matriz()),
     ]
     config = {
         "version": "5.43",
-        "themeCollection": {},
+        # El tema propio se registra como recurso del informe (StaticResources/RegisteredResources)
+        "themeCollection": {"customTheme": {"name": TEMA, "version": "5.43", "type": 1}},
         "activeSectionIndex": 0,
         "defaultDrillFilterOtherVisuals": True,
         "settings": {"useNewFilterPaneExperience": True, "allowChangeFilterTypes": True,
@@ -280,13 +387,22 @@ def informe() -> dict:
     return {
         "config": json.dumps(config),
         "layoutOptimization": 0,
+        "resourcePackages": [{"resourcePackage": {
+            "name": "RegisteredResources", "type": 1, "disabled": False,
+            "items": [{"type": 202, "path": TEMA, "name": TEMA}],
+        }}],
         "sections": [{
             "name": "ReportSectionTablero",
             "displayName": "Tablero",
             "displayOption": 1,
             "width": 1280,
             "height": 720,
-            "config": "{}",
+            # Fondo oscuro también en la página (además del tema), por si el tema no se carga
+            "config": json.dumps({"objects": {
+                "background": [{"properties": {"color": {"solid": {"color": _lit(f"'{FONDO_PAGINA}'")}},
+                                               "transparency": _lit("0D")}}],
+                "outspace": [{"properties": {"color": {"solid": {"color": _lit(f"'{FONDO_PAGINA}'")}}}}],
+            }}),
             "filters": "[]",
             "visualContainers": visuales,
         }],
@@ -303,8 +419,9 @@ def _escribir(ruta: Path, contenido) -> None:
 
 
 def generar(destino: Path, servidor: str, base: str) -> Path:
-    if destino.exists():
-        shutil.rmtree(destino)
+    # Se sobrescriben los archivos uno a uno (sin borrar la carpeta) para conservar la caché .pbi de
+    # Power BI Desktop si existe, y para no fallar si Power BI tiene la carpeta abierta.
+    _escribir(destino / f"{NOMBRE}.Report" / "StaticResources" / "RegisteredResources" / TEMA, tema())
     _escribir(destino / f"{NOMBRE}.pbip", {
         "version": "1.0",
         "artifacts": [{"report": {"path": f"{NOMBRE}.Report"}}],
